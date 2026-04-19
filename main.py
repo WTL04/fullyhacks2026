@@ -97,6 +97,21 @@ async def connect(sid, environ):
     print(f"Client connected: {sid}")
 
 
+@sio.event
+async def user_action(sid, data):
+    """Handle user actions from the frontend."""
+    action_type = data.get("type")
+    target = data.get("target")
+    value = data.get("value")
+
+    from backend.user_actions import dispatch_user_action
+
+    result = dispatch_user_action(action_type, target, value)
+
+    await sio.emit("action_results", [result])
+    print(f"User Action: {action_type} on {target} -> {result['status']}")
+
+
 # --- Entry Point ---
 if __name__ == "__main__":
     import uvicorn

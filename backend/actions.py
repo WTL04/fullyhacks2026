@@ -184,6 +184,7 @@ def close_port(target: str, value=None) -> dict:
 
 # ── Research actions ───────────────────────────────────────────────────────────
 
+
 def fund_research(target: str, value=None) -> dict:
     """
     Boost research output for a country for 10 ticks.
@@ -226,13 +227,12 @@ def fund_research(target: str, value=None) -> dict:
 
     world_state["research_boosts"][target] = {
         "multiplier": multiplier,
-        "ticks_remaining": 10
+        "ticks_remaining": 10,
     }
     country["gdp"] = round(country["gdp"] - gdp_cost, 4)
 
     return _ok(
-        f"{target} research funded at {multiplier}x for 10 ticks "
-        f"(GDP -{gdp_cost})"
+        f"{target} research funded at {multiplier}x for 10 ticks (GDP -{gdp_cost})"
     )
 
 
@@ -285,7 +285,7 @@ def share_data(target: str, value: str) -> dict:
 
     return _ok(
         f"Data shared between {target} and {value}: "
-        f"+{boost*100:.0f}% global vaccine progress "
+        f"+{boost * 100:.0f}% global vaccine progress "
         f"(GDP -{gdp_cost}, pair locked for rest of game)"
     )
 

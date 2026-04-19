@@ -232,11 +232,8 @@ def check_win_condition():
 
 
 def initialize_simulation():
-    """Randomly selects one country to be the source of the infection."""
-    countries = list(world_state["countries"].keys())
-    patient_zero = random.choice(countries)
-    world_state["countries"][patient_zero]["infected"] = 0.01
-    print(f"Simulation initialized: Patient Zero is in {patient_zero}")
+    """Initializes the simulation state. Patient Zero is now determined by the user."""
+    print("Simulation initialized: Waiting for user to deploy the virus.")
 
 
 def reset_world_state():
