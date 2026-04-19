@@ -214,19 +214,25 @@
         });
 
 
-        // Connect to Backend Websocket
-        const socket = io("https://fullyhacks2026-dev.up.railway.app/");
+        const socket = io();
 
-
-        // Update Panel & Footer Stats
         socket.on('state_update', (data) => {
-            document.getElementById('stat-utility').innerText = data.utility_score.toFixed(3);
-            document.getElementById('bar-utility').style.width = `${data.utility_score * 100}%`;
-            document.getElementById('stat-infected').innerText = `${(data.global_infected * 100).toFixed(2)}%`;
-            document.getElementById('bar-infected').style.width = `${data.global_infected * 100}%`;
-            document.getElementById('footer-tick').innerText = data.tick;
-            document.getElementById('footer-vac').innerText = data.global_vaccine_progress.toFixed(2);
-            document.getElementById('footer-evo').innerText = data.evolution_points;
+            if (!data) return;
+            if (data.utility_score != null) {
+                document.getElementById('stat-utility').innerText = data.utility_score.toFixed(3);
+                document.getElementById('bar-utility').style.width = `${data.utility_score * 100}%`;
+            }
+            if (data.global_infected != null) {
+                document.getElementById('stat-infected').innerText = `${(data.global_infected * 100).toFixed(2)}%`;
+                document.getElementById('bar-infected').style.width = `${data.global_infected * 100}%`;
+            }
+            if (data.countries) {
+                const totalDeaths = Object.values(data.countries).reduce((sum, c) => sum + (c.dead || 0), 0);
+                document.getElementById('stat-deaths').innerText = totalDeaths.toLocaleString();
+            }
+            if (data.tick != null) document.getElementById('footer-tick').innerText = data.tick;
+            if (data.global_vaccine_progress != null) document.getElementById('footer-vac').innerText = data.global_vaccine_progress.toFixed(2);
+            if (data.evolution_points != null) document.getElementById('footer-evo').innerText = data.evolution_points;
         });
 
         // Update Coordinator logs
@@ -242,7 +248,7 @@
 
 
         function sendAction(type, target, value) {
-          socket.emit('user_action', {type, target, value})
+            socket.emit('user_action', { type, target, value });
         }
 
 

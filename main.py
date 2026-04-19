@@ -105,23 +105,28 @@ app = FastAPI(title="fullyhacks", lifespan=lifespan)
 socket_app = socketio.ASGIApp(sio, app)
 
 
-# --- Socket Events ---
+def _get_full_state():
+    """Return the complete state dictionary for frontend updates."""
+    global_infected = sum(
+        c["population"] * c["infected"] for c in world_state["countries"].values()
+    ) / sum(c["population"] for c in world_state["countries"].values())
+    return {
+        "tick": world_state["tick"],
+        "countries": world_state["countries"],
+        "global_vaccine_progress": world_state["global_vaccine_progress"],
+        "active_mutations": world_state["active_mutations"],
+        "evolution_points": world_state["evolution_points"],
+        "global_infected": global_infected,
+        "utility_score": _get_utility(),
+    }
+
+
 @sio.event
 async def connect(sid, environ):
     print(f"Client connected: {sid}")
     # Send current state immediately if simulation is already running
     if world_state["simulation_running"]:
-        await sio.emit(
-            "state_update",
-            {
-                "tick": world_state["tick"],
-                "countries": world_state["countries"],
-                "global_vaccine_progress": world_state["global_vaccine_progress"],
-                "active_mutations": world_state["active_mutations"],
-                "evolution_points": world_state["evolution_points"],
-            },
-            to=sid,
-        )
+        await sio.emit("state_update", _get_full_state(), to=sid)
 
 
 @sio.event
