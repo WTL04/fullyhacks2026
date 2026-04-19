@@ -29,6 +29,7 @@ coordinator.py
 import os
 import json
 import re
+import asyncio
 from dotenv import load_dotenv
 from google import genai
 from backend.world_state import (
@@ -335,14 +336,16 @@ def parse_directives(response_text):
 
 # --- Coordinator Model ---
 async def run_coordinator(world_state, sio=None):
-    # TODO:
     """
     → OBSERVE: read world state
     → THINK: reason about it
     → ACT: issue directives
     → directives execute instantly in Python
-    """
 
+    NOTE: The Gemini API call is run in a thread pool executor to avoid
+    blocking the asyncio event loop. This ensures the tick loop continues
+    independently while waiting for the API response.
+    """
     current_state = compress_state(world_state)
     observation = f"""
     OBSERVE {current_state}:
@@ -351,9 +354,15 @@ async def run_coordinator(world_state, sio=None):
     Respond in the required JSON format.
     """
 
-    # Use the chat session to send the observation
-    # chat_session.send_message handles history automatically
-    response = chat_session.send_message(observation)
+    # Run the blocking Gemini API call in a thread pool to avoid blocking
+    # the asyncio event loop. This allows tick_loop to continue running
+    # independently while we wait for the API response.
+    loop = asyncio.get_event_loop()
+    response = await loop.run_in_executor(
+        None,  # Use default ThreadPoolExecutor
+        chat_session.send_message,
+        observation
+    )
 
     thought, actions = parse_directives(response.text)
 
