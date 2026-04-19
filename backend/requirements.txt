@@ -1,0 +1,5 @@
+fastapi[standard]
+uvicorn
+python-socketio
+google-genai
+python-dotenv
