@@ -32,7 +32,7 @@ async def tick_loop():
             continue
 
         # Advance simulation
-        apply_spread_tick(world_state)
+        mutation = apply_spread_tick(world_state)
 
         # Broadcast state to frontend
         await sio.emit(
@@ -51,6 +51,10 @@ async def tick_loop():
                 "utility_score": _get_utility(),
             },
         )
+
+        # Emit virus log if mutation occurred
+        if mutation:
+            await sio.emit("virus_log", {"tick": world_state["tick"], "message": f"Mutation: {mutation}", "type": "mutation"})
 
         # Run coordinator every N ticks
         if world_state["tick"] % COORDINATOR_INTERVAL == 0:
@@ -181,6 +185,7 @@ async def deploy_virus(action: DeployAction):
 
     # Notify all connected clients
     await sio.emit("simulation_started", {"country": country})
+    await sio.emit("virus_log", {"tick": world_state["tick"], "message": f"Virus deployed in {country}", "type": "deploy"})
 
     return {"status": "success", "message": f"Virus deployed in {country}"}
 

@@ -135,10 +135,10 @@ MUTATION_TABLE = [
 
 
 def mutation_roll(world_state):
-    """Stochastic mutation check. Runs every MUTATION_INTERVAL ticks."""
+    """Stochastic mutation check. Runs every MUTATION_INTERVAL ticks. Returns mutation name if triggered."""
     mutations = world_state["active_mutations"]
     if len(mutations) >= 3:
-        return  # Max mutations reached
+        return None  # Max mutations reached
 
     global_infected = sum(
         c["population"] * c["infected"] for c in world_state["countries"].values()
@@ -154,7 +154,8 @@ def mutation_roll(world_state):
                 print(
                     f"[MUTATION] {mutation_name} triggered at tick {world_state['tick']}"
                 )
-                break  # One mutation per roll
+                return mutation_name  # One mutation per roll
+    return None
 
 
 def update_vaccine_progress(world_state):

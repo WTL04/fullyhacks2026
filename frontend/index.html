@@ -24,6 +24,7 @@
             --accent-red:   #ef4444;
             --accent-green: #22c55e;
             --accent-yellow:#eab308;
+            --accent-purple:#a855f7;
             --text-primary: #f1f5f9;
             --text-muted:   #64748b;
             --font:         'Share Tech Mono', monospace;
@@ -151,10 +152,15 @@
         }
 
         .log-entry.active { border-left-color: var(--accent-blue); }
+        .log-entry.virus { border-left-color: var(--accent-purple); }
         .log-tick { font-size: 10px; color: var(--accent-blue); letter-spacing: 1px; }
+        .log-tick.virus { color: var(--accent-purple); }
         .log-thought { font-size: 11px; color: var(--text-primary); line-height: 1.5; white-space: pre-wrap; }
+        .log-message { font-size: 11px; color: var(--text-primary); line-height: 1.5; }
         .log-actions { font-size: 10px; color: var(--accent-yellow); line-height: 1.6; margin-top: 4px; }
         .log-actions span { display: inline-block; background: rgba(234, 179, 8, 0.15); padding: 2px 6px; border-radius: 3px; margin-right: 4px; }
+        .log-message.mutation { color: var(--accent-purple); }
+        .log-message.deploy { color: var(--accent-red); }
 
         .panel-footer {
             padding: 10px 20px;
@@ -250,6 +256,16 @@
             feed.prepend(entry);
         });
 
+        socket.on('virus_log', (data) => {
+            const feed = document.getElementById('virus-feed');
+            const { tick, message, type } = data;
+            const entry = document.createElement('div');
+            entry.className = `log-entry virus`;
+            const colorClass = type === 'mutation' ? 'mutation' : 'deploy';
+            entry.innerHTML = `<div class="log-tick virus">TICK ${tick}</div><div class="log-message ${colorClass}">${message}</div>`;
+            feed.prepend(entry);
+        });
+
         function sendAction(type, target, value) {
             socket.emit('user_action', { type, target, value });
         }
@@ -286,6 +302,11 @@
         <div class="log-section">
             <div class="log-header">Coordinator Log</div>
             <div class="log-feed" id="log-feed"></div>
+        </div>
+
+        <div class="log-section">
+            <div class="log-header">Virus Log</div>
+            <div class="log-feed" id="virus-feed"></div>
         </div>
 
         <div class="panel-footer">
