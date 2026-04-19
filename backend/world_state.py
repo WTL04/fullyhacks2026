@@ -4,12 +4,16 @@ import random
 world_state = {
     "tick": 0,
     "game_status": None,
+    "simulation_running": False,
+    "speed_multiplier": 1,
+    "last_user_action": None,
+    "last_action_results": [],
     "active_mutations": [],
     "evolution_points": 0,
     "global_vaccine_progress": 0.0,
-    "research_boosts": {},      # {"Brazil": {"multiplier": 1.5, "ticks_remaining": 10}}
-    "shared_data_pairs": [],    # ["USA-Brazil", "Canada-USA"]
-    "drug_resistance_counter":  None,  # None or {"ticks_remaining": 14}
+    "research_boosts": {},  # {"Brazil": {"multiplier": 1.5, "ticks_remaining": 10}}
+    "shared_data_pairs": [],  # ["USA-Brazil", "Canada-USA"]
+    "drug_resistance_counter": None,  # None or {"ticks_remaining": 14}
     "countries": {
         "USA": {
             "population": 335000000,
@@ -52,7 +56,7 @@ world_state = {
         },
         "Brazil": {
             "population": 215000000,
-            "infected": 0.0,
+            "infected": 0.15,  # TEST: Adding infection to debug frontend
             "dead": 0,
             "gdp": 0.60,
             "containment_level": 0.0,
@@ -155,6 +159,25 @@ def check_win_condition():
 
 def initialize_simulation():
     """Initializes the simulation state. Patient Zero is now determined by the user."""
+    world_state["simulation_running"] = False
+    world_state["tick"] = 0
+    world_state["game_status"] = None
+    world_state["active_mutations"] = []
+    world_state["evolution_points"] = 0.0
+    world_state["global_vaccine_progress"] = 0.0
+    world_state["last_user_action"] = None
+    world_state["last_action_results"] = []
+    world_state["research_boosts"] = {}
+    world_state["shared_data_pairs"] = []
+    world_state["drug_resistance_counter"] = None
+    # Reset all countries to starting values
+    for name, country in world_state["countries"].items():
+        country["infected"] = 0.0
+        country["dead"] = 0
+        country["containment_level"] = 0.0
+        country["airports_open"] = True
+        country["ports_open"] = True
+        country["land_borders"] = {k: True for k in country["land_borders"]}
     print("Simulation initialized: Waiting for user to deploy the virus.")
 
 

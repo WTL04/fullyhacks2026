@@ -24,7 +24,6 @@ coordinator.py
                 ├── calls parse_directives()
                 ├── emits to sio
                 └── returns thought, actions
-
 """
 
 import os
