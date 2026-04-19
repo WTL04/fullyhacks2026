@@ -57,7 +57,7 @@ async def tick_loop():
             thought, actions = await run_coordinator(world_state, sio)
             results = dispatch_directives(actions)
             world_state["last_action_results"] = results
-            await sio.emit("action_results", results)
+            await sio.emit("action_results", {"thought": thought, "actions": actions, "results": results, "tick": world_state["tick"]})
             print(f"\n[TICK {world_state['tick']}] Coordinator Thought: {thought}")
             print(
                 f"[TICK {world_state['tick']}] Actions: {json.dumps(actions, indent=2)}"

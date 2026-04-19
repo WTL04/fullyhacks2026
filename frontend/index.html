@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Pathogen Response System - Skeleton</title>
- 
+
     <link rel="stylesheet" href="https://js.arcgis.com/5.0/esri/themes/dark/main.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
     <style>
@@ -41,15 +40,13 @@
             flex-direction: row;
         }
 
-        /* Map Container */
         #viewDiv {
-            flex: 1; 
+            flex: 1;
             height: 100%;
         }
 
-        /* Side Panel */
         #sidePanel {
-            width: 450px; /* Fixed width prevents resizing issues when logs populate */
+            width: 450px;
             height: 100%;
             background: var(--bg-panel);
             border-left: 1px solid var(--border);
@@ -58,7 +55,6 @@
             flex-shrink: 0;
         }
 
-        /* Panel Header */
         .panel-header {
             padding: 16px 20px;
             border-bottom: 1px solid var(--border);
@@ -68,7 +64,6 @@
             text-transform: uppercase;
         }
 
-        /* Stats Section */
         .stats-section {
             padding: 16px 20px;
             border-bottom: 1px solid var(--border);
@@ -110,7 +105,7 @@
             height: 100%;
             border-radius: 2px;
             transition: width 0.8s ease;
-            width: 0%; /* Default empty state */
+            width: 0%;
         }
 
         .progress-fill.utility {
@@ -121,7 +116,6 @@
             background: linear-gradient(90deg, var(--accent-yellow), var(--accent-red));
         }
 
-        /* Log Section */
         .log-section {
             flex: 1;
             display: flex;
@@ -148,7 +142,6 @@
             gap: 12px;
         }
 
-        /* These log entry classes are provided for your backend to template */
         .log-entry {
             border-left: 2px solid var(--border);
             padding-left: 10px;
@@ -156,12 +149,13 @@
             flex-direction: column;
             gap: 4px;
         }
+
         .log-entry.active { border-left-color: var(--accent-blue); }
         .log-tick { font-size: 10px; color: var(--accent-blue); letter-spacing: 1px; }
-        .log-thought { font-size: 11px; color: var(--text-primary); line-height: 1.5; }
-        .log-actions { font-size: 10px; color: var(--accent-yellow); line-height: 1.6; }
+        .log-thought { font-size: 11px; color: var(--text-primary); line-height: 1.5; white-space: pre-wrap; }
+        .log-actions { font-size: 10px; color: var(--accent-yellow); line-height: 1.6; margin-top: 4px; }
+        .log-actions span { display: inline-block; background: rgba(234, 179, 8, 0.15); padding: 2px 6px; border-radius: 3px; margin-right: 4px; }
 
-        /* Panel Footer */
         .panel-footer {
             padding: 10px 20px;
             border-top: 1px solid var(--border);
@@ -172,14 +166,12 @@
             justify-content: space-between;
         }
 
-        /* Custom Scrollbar */
         .log-feed::-webkit-scrollbar { width: 3px; }
         .log-feed::-webkit-scrollbar-track { background: transparent; }
         .log-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
     </style>
 
     <script type="module" src="https://js.arcgis.com/5.0/"></script>
-
     <script type="module">
         const [Map, SceneView] = await $arcgis.import([
             "@arcgis/core/Map.js",
@@ -240,14 +232,22 @@
             if (data.evolution_points != null) document.getElementById('footer-evo').innerText = data.evolution_points;
         });
 
-        socket.on('action_results', (results) => {
+        socket.on('action_results', (data) => {
             const feed = document.getElementById('log-feed');
-            results.forEach(res => {
-                const entry = document.createElement('div');
-                entry.className = `log-entry ${res.status === 'success' ? 'active' : ''}`;
-                entry.innerHTML = `<div class="log-thought">${res.message}</div>`;
-                feed.prepend(entry);
-            });
+            const { thought, actions, tick } = data;
+            const entry = document.createElement('div');
+            entry.className = 'log-entry active';
+            let html = `<div class="log-tick">TICK ${tick}</div>`;
+            if (thought) html += `<div class="log-thought">${thought}</div>`;
+            if (actions && actions.length) {
+                html += `<div class="log-actions">`;
+                actions.forEach(a => {
+                    html += `<span>${a.type} ${a.target}</span>`;
+                });
+                html += `</div>`;
+            }
+            entry.innerHTML = html;
+            feed.prepend(entry);
         });
 
         function sendAction(type, target, value) {
@@ -258,9 +258,9 @@
 
 <body>
     <div id="viewDiv"></div>
-    
+
     <div id="sidePanel">
-        <div class="panel-header">⬡ Pathogen Response System</div>
+        <div class="panel-header">Pathogen Response System</div>
 
         <div class="stats-section">
             <div class="stat-row">
@@ -284,7 +284,7 @@
         </div>
 
         <div class="log-section">
-            <div class="log-header">◈ Coordinator Log</div>
+            <div class="log-header">Coordinator Log</div>
             <div class="log-feed" id="log-feed"></div>
         </div>
 
