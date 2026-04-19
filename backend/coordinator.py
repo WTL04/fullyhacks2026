@@ -115,6 +115,11 @@ You must respond in valid JSON. Markdown code blocks are allowed. Your response 
       "type": "foreign_aid",
       "target": "DONOR_COUNTRY",
       "value": "RECIPIENT_COUNTRY"
+    },
+    {
+      "type": "reduce_containment",
+      "target": "COUNTRY_NAME",
+      "value": 20
     }
   ]
 }
@@ -125,6 +130,9 @@ Containment:
 - set_containment value is 0-100 (integer). Higher values reduce spread but cost GDP and food supply.
 - close_border / open_border block or restore land transmission between neighbors.
 - close_airport / close_port block long-range air or sea transmission. Use AIRPORT_CODE (e.g. JFK) or PORT_CODE (e.g. PORT_NY).
+- reduce_containment lowers containment on a country to recover GDP. 
+  Use when GDP falls below 0.20 and spread is stable. 
+  Accepts higher transmission risk in exchange for economic recovery.
 
 Research:
 - fund_research boosts a country's vaccine research output by value multiplier (1.1-3.0) for 10 ticks. Costs 10% GDP. Country must have research_capacity > 0. If a boost is already active, it extends duration instead of overwriting.
@@ -142,6 +150,14 @@ Foreign Aid:
   global spread through open borders. Keeping all countries economically 
   viable is the optimal long-term strategy.
 - Do not send aid to a country with GDP already above 0.50.
+
+TRIAGE PROTOCOL:
+- If a country's GDP falls below 0.10 and infection exceeds 20%, 
+  classify it as a SACRIFICE ZONE.
+- In a SACRIFICE ZONE: open borders to reduce GDP drain, 
+  remove containment, and redirect any remaining resources 
+  to high-GDP high-research countries.
+- Explicitly state in your thought when you are implementing triage.
 
 General:
 - Keep actions targeted and minimal per tick to conserve resources and avoid cascading economic collapse.

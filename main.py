@@ -10,7 +10,7 @@ from backend.world_state import world_state, check_win_condition, initialize_sim
 from backend.simulation import apply_spread_tick
 
 # --- Config ---
-COORDINATOR_INTERVAL = 10  # run coordinator every N ticks
+COORDINATOR_INTERVAL = 5  # run coordinator every N ticks
 
 
 # --- Background Tasks ---

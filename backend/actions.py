@@ -5,11 +5,11 @@ from backend.simulation import AIRPORTS, PORTS
 
 # ── GDP costs ──────────────────────────────────────────────────────────────────
 COSTS = {
-    "set_containment": 0.10,  # per 10-point containment increase
-    "close_border": 0.03,
+    "set_containment": 0.05,  # per 10-point containment increase
+    "close_border": 0.02,
     "open_border": 0.00,  # free to reopen
-    "close_airport": 0.08,  # scaled by traffic below
-    "close_port": 0.05,  # scaled by traffic below
+    "close_airport": 0.06,  # scaled by traffic below
+    "close_port": 0.04,  # scaled by traffic below
 }
 
 
@@ -379,6 +379,34 @@ def foreign_aid(target: str, value: str) -> dict:
     )
 
 
+def reduce_containment(target: str, value: int) -> dict:
+    """
+    Lower containment level to recover GDP.
+    Accepts risk of increased spread in exchange for economic recovery.
+    """
+    countries = world_state["countries"]
+    if target not in countries:
+        return _fail(f"Unknown country: {target}")
+
+    country = countries[target]
+    new_level = round(value / 100, 2)
+
+    if new_level >= country["containment_level"]:
+        return _fail(f"Use set_containment to increase, not reduce")
+
+    old_level = country["containment_level"]
+    country["containment_level"] = new_level
+
+    # GDP partially recovers immediately when containment drops
+    gdp_recovery = (old_level - new_level) * 0.05
+    country["gdp"] = min(country["gdp"] + gdp_recovery, 1.0)
+
+    return _ok(
+        f"{target} containment reduced to {value}% "
+        f"(GDP +{gdp_recovery:.3f}, spread risk increased)"
+    )
+
+
 # ── Dispatcher ─────────────────────────────────────────────────────────────────
 
 ACTION_MAP = {
@@ -391,6 +419,7 @@ ACTION_MAP = {
     "share_data": share_data,
     "develop_counter": develop_counter,
     "foreign_aid": foreign_aid,
+    "reduce_containment": reduce_containment,
 }
 
 

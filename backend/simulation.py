@@ -15,9 +15,9 @@ import random
 from backend.world_state import AIRPORTS, AIRPORT_ROUTES, PORTS, PORT_ROUTES
 
 # Base rates
-BASE_TRANSMISSION = 0.03
-BASE_MORTALITY = 0.002
-MUTATION_INTERVAL = 7  # ticks
+BASE_TRANSMISSION = random.uniform(0.03, 0.13)
+BASE_MORTALITY = random.uniform(0.002, 0.001)
+MUTATION_INTERVAL = random.randint(5, 20)  # ticks
 
 
 def get_airport_modifier(country_name, world_state):
@@ -246,6 +246,23 @@ def tick_drug_resistance_counter(world_state):
         counter["ticks_remaining"] = 0
 
 
+def recover_gdp(world_state):
+    """
+    GDP slowly recovers toward a ceiling based on living population.
+    Recovery is slower under active containment.
+    """
+    for country in world_state["countries"].values():
+        # GDP slowly recovers toward a ceiling based on living population
+        population_ratio = 1 - (country["dead"] / max(country["population"], 1))
+        recovery_rate = 0.001 * population_ratio
+
+        # Recovery is slower under active containment
+        if country["containment_level"] > 0.5:
+            recovery_rate *= 0.3
+
+        country["gdp"] = min(country["gdp"] + recovery_rate, 1.0)
+
+
 def apply_spread_tick(world_state):
     """Main tick function. Call this every second from the tick loop."""
     world_state["tick"] += 1
@@ -258,6 +275,7 @@ def apply_spread_tick(world_state):
     update_vaccine_progress(world_state)
     tick_research_boosts(world_state)
     tick_drug_resistance_counter(world_state)
+    recover_gdp(world_state)
 
     # Mutation check every 7 ticks
     if world_state["tick"] % MUTATION_INTERVAL == 0:
