@@ -1,0 +1,137 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-84.328, 33.799]
+      },
+      "properties": {
+        "name": "Centers for Disease Control and Prevention (CDC)",
+        "country": "USA",
+        "address": "1600 Clifton Rd NE, Atlanta, GA 30333, USA"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-77.118, 39.058]
+      },
+      "properties": {
+        "name": "National Institute of Allergy and Infectious Diseases (NIAID)",
+        "country": "USA",
+        "address": "5601 Fishers Lane, Rockville, MD 20892, USA"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-97.1632, 49.9101]
+      },
+      "properties": {
+        "name": "National Microbiology Laboratory (NML)",
+        "country": "Canada",
+        "address": "1015 Arlington St, Winnipeg, MB R3E 3R2, Canada"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-75.71, 45.34]
+      },
+      "properties": {
+        "name": "Public Health Agency of Canada (PHAC)",
+        "country": "Canada",
+        "address": "130 Colonnade Rd, Ottawa, ON K1A 0K9, Canada"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-99.195, 19.37]
+      },
+      "properties": {
+        "name": "Instituto de Diagnóstico y Referencia Epidemiológicos (InDRE)",
+        "country": "Mexico",
+        "address": "Francisco de P. Miranda 157, Lomas de Plateros, 01480 Ciudad de México, Mexico"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-43.243, -22.877]
+      },
+      "properties": {
+        "name": "Fundação Oswaldo Cruz (Fiocruz)",
+        "country": "Brazil",
+        "address": "Av. Brasil, 4365 - Manguinhos, Rio de Janeiro - RJ, 21040-900, Brazil"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-46.721, -23.566]
+      },
+      "properties": {
+        "name": "Instituto Butantan",
+        "country": "Brazil",
+        "address": "Av. Vital Brasil, 1500 - Butantã, São Paulo - SP, 05503-001, Brazil"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-74.092, 4.643]
+      },
+      "properties": {
+        "name": "Instituto Nacional de Salud (INS)",
+        "country": "Colombia",
+        "address": "Avenida Calle 26 # 51-20, Bogotá, Colombia"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-66.892, 10.491]
+      },
+      "properties": {
+        "name": "Instituto Nacional de Higiene \"Rafael Rangel\" (INHRR)",
+        "country": "Venezuela",
+        "address": "Ciudad Universitaria de Caracas, Los Chaguaramos, Caracas 1051, Venezuela"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-58.378, -34.632]
+      },
+      "properties": {
+        "name": "ANLIS Malbrán",
+        "country": "Argentina",
+        "address": "Av. Vélez Sarsfield 563, C1282 Cdad. Autónoma de Buenos Aires, Argentina"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-70.623, -33.463]
+      },
+      "properties": {
+        "name": "Instituto de Salud Pública (ISP)",
+        "country": "Chile",
+        "address": "Av. Marathon 1000, Ñuñoa, Santiago, Chile"
+      }
+    }
+  ]
+}
