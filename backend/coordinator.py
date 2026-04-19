@@ -30,6 +30,7 @@ coordinator.py
 
 import os
 import json
+import re
 from dotenv import load_dotenv
 from google import genai
 from world_state import (
@@ -45,8 +46,62 @@ from world_state import (
 load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-model = "gemini-2.5-flash"
+MODEL = "gemini-2.5-flash"
 conversation_history = []
+SYSTEM_PROMPT = """
+You are the Global Pandemic Response Coordinator, an advanced AI system tasked with neutralizing a global biological threat. You operate in a continuous simulation loop. 
+
+YOUR OBJECTIVE:
+Maximize the Global Utility Score by balancing disease containment, economic stability (GDP), food/water supply, and vaccine research progress.
+
+INPUT DATA EXPECTATIONS:
+You will receive a compressed string of the current world state containing:
+1. Global Metrics: Current Tick, Evolution Points (resource currency), Vaccine Progress, Active Pathogen Mutations, and Global Utility/Infections.
+2. Country Data: A markdown table containing Population, Infection %, Deaths, GDP, Containment Level (0-100%), Food Supply, Research Capacity, and Land Border Status (O=Open, C=Closed).
+3. Infrastructure Risk: Lists of high-risk open airports and ports (connected to infected regions).
+
+STATE MEMORY:
+You have access to your conversation history, which contains your past observations (world state snapshots) and your previous directives. Only look at the past 5 exchanges when making a decision. Use this history to avoid redundant directives and track the effects of your previous actions.
+
+OUTPUT FORMAT:
+You must respond in valid JSON. Markdown code blocks are allowed. Your response must adhere strictly to this schema:
+
+{
+  "thought": "Brief analysis of the current threats and your intended approach for this tick.",
+  "actions": [
+    {
+      "type": "set_containment",  // TODO: implement
+      "target": "COUNTRY_NAME",
+      "value": 80
+    },
+    {
+      "type": "close_border",  // TODO: implement
+      "target": "COUNTRY_A",
+      "value": "COUNTRY_B"
+    },
+    {
+      "type": "open_border",  // TODO: implement
+      "target": "COUNTRY_A",
+      "value": "COUNTRY_B"
+    },
+    {
+      "type": "close_airport",  // TODO: implement
+      "target": "AIRPORT_CODE",
+      "value": null
+    },
+    {
+      "type": "close_port",  // TODO: implement
+      "target": "PORT_CODE",
+      "value": null
+    }
+  ]
+}
+
+ACTION CONSTRAINTS:
+- Containment levels reduce spread but damage GDP and Food Supply.
+- Border and infrastructure closures prevent transmission between regions but halt economic exchange.
+- Keep actions targeted and minimal per tick to conserve resources and avoid cascading economic collapse.
+"""
 
 
 # --- World Information ---
@@ -63,7 +118,10 @@ def get_infrastructure_risks(world_state):
             continue
 
         # check if any route connects to an infected country
-        for a, b, in AIRPORT_ROUTES:
+        for (
+            a,
+            b,
+        ) in AIRPORT_ROUTES:
             other = b if a == code else (a if b == code else None)
             if other:
                 other_country = AIRPORTS[other]["country"]
@@ -75,10 +133,13 @@ def get_infrastructure_risks(world_state):
         # track current closed ports
         if not world_state["port_status"].get(code, True):
             closed_ports.append(code)
-            continue 
+            continue
 
         # check if any routes connect to an infected country
-        for a, b, in PORT_ROUTES:
+        for (
+            a,
+            b,
+        ) in PORT_ROUTES:
             other = b if a == code else (a if b == code else None)
             if other:
                 other_country = PORTS[other]["country"]
@@ -90,30 +151,29 @@ def get_infrastructure_risks(world_state):
         "high_risk_airports_open": high_risk_airports,
         "high_risk_ports_open": high_risk_ports,
         "closed_airports": closed_airports,
-        "closed_ports": closed_ports
+        "closed_ports": closed_ports,
     }
 
+
 def generate_country_table(world_state):
-    """ Genearte a Markdown Table formated string to save token count """
+    """Genearte a Markdown Table formated string to save token count"""
     header = "| Country | Pop | Inf% | Dead | GDP | Cont% | Food | Research | Borders |"
     divider = "|---|---|---|---|---|---|---|---|---|"
     rows = []
 
     for name, c in world_state["countries"].items():
         if c["infected"] < 0.001 and not any(
-            world_state["countries"][n]["infected"] > 0.01
-            for n in c["land_borders"]
+            world_state["countries"][n]["infected"] > 0.01 for n in c["land_borders"]
         ):
             continue  # skip fully safe countries with no infected neighbors
 
-        borders = " ".join([
-            f"{n}({'O' if open else 'C'})"
-            for n, open in c["land_borders"].items()
-        ])
-        pop_m = f"{c['population']//1_000_000}M"
+        borders = " ".join(
+            [f"{n}({'O' if open else 'C'})" for n, open in c["land_borders"].items()]
+        )
+        pop_m = f"{c['population'] // 1_000_000}M"
         rows.append(
-            f"| {name} | {pop_m} | {c['infected']*100:.1f}% | "
-            f"{c['dead']:,} | {c['gdp']:.2f} | {c['containment_level']*100:.0f}% | "
+            f"| {name} | {pop_m} | {c['infected'] * 100:.1f}% | "
+            f"{c['dead']:,} | {c['gdp']:.2f} | {c['containment_level'] * 100:.0f}% | "
             f"{c['food_water_supply']:.2f} | {c['research_capacity']} | {borders} |"
         )
 
@@ -128,6 +188,7 @@ def compress_state(world_state):
         f"[VAC_PROG: {world_state['global_vaccine_progress'] * 100:.0f}%] "
         f"[MUTATIONS: {', '.join(world_state['active_mutations']) or 'none'}] "
         f"[UTILITY: {get_utility_score():.3f}]"
+        f"[GLOBAL INFECTIONS: {get_global_infected()}]"
     )
 
     country_table = generate_country_table(world_state)
@@ -143,7 +204,29 @@ def compress_state(world_state):
     return f"{header}\n\n{country_table}\n\nINFRASTRUCTURE RISK:\n{risk_summary}"
 
 
-# --- Coordinator Model --- 
+def parse_directives(response_text):
+    """
+    Parses the Gemini response text to extract 'thought' and 'actions'.
+    Expected JSON format: {"thought": "...", "actions": [...]}
+    """
+    try:
+        json_match = re.search(r"```json\s*(.*?)\s*```", response_text, re.DOTALL)
+        if json_match:
+            clean_content = json_match.group(1)
+        else:
+            start = response_text.find("{")
+            end = response_text.rfind("}") + 1
+            clean_content = response_text[start:end] if start != -1 else response_text
+
+        data = json.loads(clean_content)
+        return data.get("thought", "No thought provided."), data.get("actions", [])
+
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"Error parsing directives: {e}")
+        return f"Error parsing response: {response_text}", []
+
+
+# --- Coordinator Model ---
 async def run_coordinator(world_state, sio=None):
     # TODO:
     """
@@ -154,7 +237,35 @@ async def run_coordinator(world_state, sio=None):
     """
 
     current_state = compress_state(world_state)
-    return current_state
+    observation = f"""
+    OBSERVE {current_state}:
 
-if __name__ == "__main__":
-    print(compress_state(world_state))
+    Based on current state and your previous actions, what is your next move?
+    Respond in the required JSON format.
+    """
+
+    # add observation to history
+    conversation_history.append({"role": "user", "parts": [observation]})
+
+    # send full history to Gemini
+    response = client.models.generate_content(
+        model=MODEL,
+        contents=conversation_history,
+        config={"system_instruction": SYSTEM_PROMPT},
+    )
+
+    thought, actions = parse_directives(response.text)
+
+    conversation_history.append({"role": "model", "parts": [response.text]})
+
+    if len(conversation_history) > 12:
+        conversation_history.pop(0)
+        conversation_history.pop(0)
+
+    if sio:
+        await sio.emit(
+            "coordinator_log",
+            {"tick": world_state["tick"], "thought": thought, "actions": actions},
+        )
+
+    return thought, actions
