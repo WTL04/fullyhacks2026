@@ -14,7 +14,7 @@ Determines Mutation given:
 import random
 
 # Base rates
-BASE_TRANSMISSION = 0.01
+BASE_TRANSMISSION = 0.1
 BASE_MORTALITY = 0.00001
 MUTATION_INTERVAL = 10
 
@@ -103,7 +103,6 @@ def calculate_spread(country_name, world_state):
         containment *= 0.8
     effective_transmission *= 1.0 - containment
 
-
     # Malnourished population spreads faster
     if country["food_water_supply"] < 0.3:
         effective_transmission *= 1.20
@@ -137,7 +136,6 @@ def calculate_deaths(country_name, world_state):
         mortality += 0.005
     if "asymptomatic_spread" in mutations:
         mortality *= 0.5
-
 
     # Vaccine reduces mortality
     vaccine_effect = world_state["global_vaccine_progress"] * 0.8
@@ -222,7 +220,6 @@ def update_vaccine_progress(world_state):
     world_state["global_vaccine_progress"] = min(
         world_state["global_vaccine_progress"] + vaccine_delta, 1.0
     )
-
 
 
 def tick_research_boosts(world_state):
