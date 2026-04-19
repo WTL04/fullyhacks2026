@@ -28,7 +28,7 @@ async def tick_loop():
     while world_state.get("game_status") is None:
         # Wait for user to deploy virus before starting
         if not world_state["simulation_running"]:
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(3)
             continue
 
         # Advance simulation
@@ -54,14 +54,29 @@ async def tick_loop():
 
         # Emit virus log if mutation occurred
         if mutation:
-            await sio.emit("virus_log", {"tick": world_state["tick"], "message": f"Mutation: {mutation}", "type": "mutation"})
+            await sio.emit(
+                "virus_log",
+                {
+                    "tick": world_state["tick"],
+                    "message": f"Mutation: {mutation}",
+                    "type": "mutation",
+                },
+            )
 
         # Run coordinator every N ticks
         if world_state["tick"] % COORDINATOR_INTERVAL == 0:
             thought, actions = await run_coordinator(world_state, sio)
             results = dispatch_directives(actions)
             world_state["last_action_results"] = results
-            await sio.emit("action_results", {"thought": thought, "actions": actions, "results": results, "tick": world_state["tick"]})
+            await sio.emit(
+                "action_results",
+                {
+                    "thought": thought,
+                    "actions": actions,
+                    "results": results,
+                    "tick": world_state["tick"],
+                },
+            )
             print(f"\n[TICK {world_state['tick']}] Coordinator Thought: {thought}")
             print(
                 f"[TICK {world_state['tick']}] Actions: {json.dumps(actions, indent=2)}"
@@ -185,7 +200,14 @@ async def deploy_virus(action: DeployAction):
 
     # Notify all connected clients
     await sio.emit("simulation_started", {"country": country})
-    await sio.emit("virus_log", {"tick": world_state["tick"], "message": f"Virus deployed in {country}", "type": "deploy"})
+    await sio.emit(
+        "virus_log",
+        {
+            "tick": world_state["tick"],
+            "message": f"Virus deployed in {country}",
+            "type": "deploy",
+        },
+    )
 
     return {"status": "success", "message": f"Virus deployed in {country}"}
 
