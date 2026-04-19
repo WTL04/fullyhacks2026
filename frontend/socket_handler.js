@@ -1,5 +1,5 @@
 const socket = io({
-  transports=["websocket"]
+  transports: ["websocket"]
 });
 
 socket.on('connect', () => {
