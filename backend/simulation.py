@@ -214,4 +214,3 @@ def apply_spread_tick(world_state):
     ) / sum(c["population"] for c in world_state["countries"].values())
 
     world_state["evolution_points"] += global_infected * 10
-

@@ -12,10 +12,17 @@ AIRPORTS = {
 }
 
 AIRPORT_ROUTES = [
-    ("JFK", "GRU"), ("JFK", "BOG"), ("JFK", "EZE"),
-    ("JFK", "SCL"), ("JFK", "MEX"), ("JFK", "YYZ"),
-    ("GRU", "BOG"), ("GRU", "EZE"), ("GRU", "SCL"),
-    ("MEX", "BOG"), ("MEX", "GRU"),
+    ("JFK", "GRU"),
+    ("JFK", "BOG"),
+    ("JFK", "EZE"),
+    ("JFK", "SCL"),
+    ("JFK", "MEX"),
+    ("JFK", "YYZ"),
+    ("GRU", "BOG"),
+    ("GRU", "EZE"),
+    ("GRU", "SCL"),
+    ("MEX", "BOG"),
+    ("MEX", "GRU"),
 ]
 
 PORTS = {
@@ -23,23 +30,46 @@ PORTS = {
     "PORT_LA": {"country": "USA", "lat": 33.7395, "lon": -118.2620, "traffic": 0.8},
     "PORT_VAN": {"country": "Canada", "lat": 49.2827, "lon": -123.1207, "traffic": 0.6},
     "PORT_VER": {"country": "Mexico", "lat": 19.2000, "lon": -96.1333, "traffic": 0.6},
-    "PORT_CTG": {"country": "Colombia", "lat": 10.3910, "lon": -75.4794, "traffic": 0.5},
-    "PORT_MAR": {"country": "Venezuela", "lat": 10.6500, "lon": -63.1800, "traffic": 0.3},
+    "PORT_CTG": {
+        "country": "Colombia",
+        "lat": 10.3910,
+        "lon": -75.4794,
+        "traffic": 0.5,
+    },
+    "PORT_MAR": {
+        "country": "Venezuela",
+        "lat": 10.6500,
+        "lon": -63.1800,
+        "traffic": 0.3,
+    },
     "PORT_SAN": {"country": "Brazil", "lat": -23.9619, "lon": -46.3042, "traffic": 0.8},
     "PORT_RIO": {"country": "Brazil", "lat": -22.8938, "lon": -43.1729, "traffic": 0.7},
-    "PORT_BUE": {"country": "Argentina", "lat": -34.5997, "lon": -58.3819, "traffic": 0.6},
+    "PORT_BUE": {
+        "country": "Argentina",
+        "lat": -34.5997,
+        "lon": -58.3819,
+        "traffic": 0.6,
+    },
     "PORT_VAL": {"country": "Chile", "lat": -33.0472, "lon": -71.6127, "traffic": 0.5},
 }
 
 PORT_ROUTES = [
-    ("PORT_NY", "PORT_SAN"), ("PORT_NY", "PORT_RIO"),
-    ("PORT_NY", "PORT_CTG"), ("PORT_NY", "PORT_BUE"),
-    ("PORT_LA", "PORT_VAL"), ("PORT_LA", "PORT_SAN"),
-    ("PORT_VAN", "PORT_SAN"), ("PORT_VAN", "PORT_VAL"),
-    ("PORT_VER", "PORT_CTG"), ("PORT_VER", "PORT_SAN"),
-    ("PORT_CTG", "PORT_MAR"), ("PORT_CTG", "PORT_SAN"),
-    ("PORT_SAN", "PORT_BUE"), ("PORT_SAN", "PORT_VAL"),
-    ("PORT_RIO", "PORT_BUE"), ("PORT_BUE", "PORT_VAL"),
+    ("PORT_NY", "PORT_SAN"),
+    ("PORT_NY", "PORT_RIO"),
+    ("PORT_NY", "PORT_CTG"),
+    ("PORT_NY", "PORT_BUE"),
+    ("PORT_LA", "PORT_VAL"),
+    ("PORT_LA", "PORT_SAN"),
+    ("PORT_VAN", "PORT_SAN"),
+    ("PORT_VAN", "PORT_VAL"),
+    ("PORT_VER", "PORT_CTG"),
+    ("PORT_VER", "PORT_SAN"),
+    ("PORT_CTG", "PORT_MAR"),
+    ("PORT_CTG", "PORT_SAN"),
+    ("PORT_SAN", "PORT_BUE"),
+    ("PORT_SAN", "PORT_VAL"),
+    ("PORT_RIO", "PORT_BUE"),
+    ("PORT_BUE", "PORT_VAL"),
 ]
 
 world_state = {
@@ -49,15 +79,26 @@ world_state = {
     "evolution_points": 0,
     "global_vaccine_progress": 0.0,
     "airport_status": {
-        "JFK": True, "GRU": True, "BOG": True,
-        "EZE": True, "SCL": True, "CCS": True,
-        "MEX": True, "YYZ": True
+        "JFK": True,
+        "GRU": True,
+        "BOG": True,
+        "EZE": True,
+        "SCL": True,
+        "CCS": True,
+        "MEX": True,
+        "YYZ": True,
     },
     "port_status": {
-        "PORT_NY": True, "PORT_LA": True, "PORT_VAN": True,
-        "PORT_VER": True, "PORT_CTG": True, "PORT_MAR": True,
-        "PORT_SAN": True, "PORT_RIO": True, "PORT_BUE": True,
-        "PORT_VAL": True
+        "PORT_NY": True,
+        "PORT_LA": True,
+        "PORT_VAN": True,
+        "PORT_VER": True,
+        "PORT_CTG": True,
+        "PORT_MAR": True,
+        "PORT_SAN": True,
+        "PORT_RIO": True,
+        "PORT_BUE": True,
+        "PORT_VAL": True,
     },
     "countries": {
         "USA": {
@@ -189,4 +230,6 @@ def check_win_condition():
 def reset_world_state():
     import importlib
     import world_state as ws
+
     importlib.reload(ws)
+
