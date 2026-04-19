@@ -4,10 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Pathogen Response System - Skeleton</title>
-    
+ 
     <link rel="stylesheet" href="https://js.arcgis.com/5.0/esri/themes/dark/main.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
+    <script src = "https://cdn.socket.io/4.2.7/socket.io.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -211,7 +213,39 @@
             ui: { components: [] } /* Removes default zoom controls for a cleaner UI */
         });
 
-        // Backend integration logic will go here
+
+        // Connect to Backend Websocket
+        const socket = io();
+
+
+        // Update Panel & Footer Stats
+        socket.on('state_update', (data) => {
+            document.getElementById('stat-utility').innerText = data.utility_score.toFixed(3);
+            document.getElementById('bar-utility').style.width = `${data.utility_score * 100}%`;
+            document.getElementById('stat-infected').innerText = `${(data.global_infected * 100).toFixed(2)}%`;
+            document.getElementById('bar-infected').style.width = `${data.global_infected * 100}%`;
+            document.getElementById('footer-tick').innerText = data.tick;
+            document.getElementById('footer-vac').innerText = data.global_vaccine_progress.toFixed(2);
+            document.getElementById('footer-evo').innerText = data.evolution_points;
+        });
+
+        // Update Coordinator logs
+        socket.on('action_results', (results) => {
+            const feed = document.getElementById('log-feed');
+            results.forEach(res => {
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${res.status === 'success' ? 'active' : ''}`;
+                entry.innerHTML = `<div class="log-thought">${res.message}</div>`;
+                feed.prepend(entry);
+            });
+        });
+
+
+        function sendAction(type, target, value) {
+          socket.emit('user_action', {type, target, value})
+        }
+
+
     </script>
 </head>
 
