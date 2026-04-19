@@ -232,7 +232,7 @@ async def run_coordinator(world_state, sio=None):
     """
     → OBSERVE: read world state
     → THINK: reason about it
-    → ACT: issue directives
+    → ACT: issue actions
     → directives execute instantly in Python
     """
 
@@ -245,7 +245,7 @@ async def run_coordinator(world_state, sio=None):
     """
 
     # add observation to history
-    conversation_history.append({"role": "user", "parts": [observation]})
+    conversation_history.append({"role": "user", "parts": [{"text": observation}]})
 
     # send full history to Gemini
     response = client.models.generate_content(
@@ -256,7 +256,7 @@ async def run_coordinator(world_state, sio=None):
 
     thought, actions = parse_directives(response.text)
 
-    conversation_history.append({"role": "model", "parts": [response.text]})
+    conversation_history.append({"role": "model", "parts": [{"text": response.text}]})
 
     if len(conversation_history) > 12:
         conversation_history.pop(0)
