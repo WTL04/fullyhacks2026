@@ -14,6 +14,10 @@ from backend.simulation import apply_spread_tick
 # --- Config ---
 COORDINATOR_INTERVAL = 5  # run coordinator every N ticks
 
+# --- Coordinator State ---
+coordinator_running = False
+coordinator_pending = False
+
 
 # --- Background Tasks ---
 async def health_broadcast():
@@ -21,6 +25,40 @@ async def health_broadcast():
     while True:
         await sio.emit("health", {"status": "ok", "tick": "server alive"})
         await asyncio.sleep(5)
+
+
+async def run_coordinator_task():
+    """Run coordinator as background task with fresh state."""
+    global coordinator_running, coordinator_pending
+
+    coordinator_running = True
+    try:
+        # Always read FRESH state when task actually starts executing
+        latest_state = _get_full_state()
+        thought, actions = await run_coordinator(latest_state, sio)
+        results = dispatch_directives(actions)
+        world_state["last_action_results"] = results
+        await sio.emit(
+            "action_results",
+            {
+                "thought": thought,
+                "actions": actions,
+                "results": results,
+                "tick": world_state["tick"],
+            },
+        )
+        print(f"\n[TICK {world_state['tick']}] Coordinator Thought: {thought}")
+        print(f"[TICK {world_state['tick']}] Actions: {json.dumps(actions, indent=2)}")
+        print(
+            f"[TICK {world_state['tick']}] Dispatched {len(actions)} actions, "
+            f"{len([r for r in results if r.get('status') == 'failed'])} failed"
+        )
+    finally:
+        coordinator_running = False
+        # If a run was queued while we were running, process it now
+        if coordinator_pending:
+            coordinator_pending = False
+            asyncio.create_task(run_coordinator_task())
 
 
 async def tick_loop():
@@ -65,26 +103,10 @@ async def tick_loop():
 
         # Run coordinator every N ticks
         if world_state["tick"] % COORDINATOR_INTERVAL == 0:
-            thought, actions = await run_coordinator(world_state, sio)
-            results = dispatch_directives(actions)
-            world_state["last_action_results"] = results
-            await sio.emit(
-                "action_results",
-                {
-                    "thought": thought,
-                    "actions": actions,
-                    "results": results,
-                    "tick": world_state["tick"],
-                },
-            )
-            print(f"\n[TICK {world_state['tick']}] Coordinator Thought: {thought}")
-            print(
-                f"[TICK {world_state['tick']}] Actions: {json.dumps(actions, indent=2)}"
-            )
-            print(
-                f"[TICK {world_state['tick']}] Dispatched {len(actions)} actions, "
-                f"{len([r for r in results if r.get('status') == 'failed'])} failed"
-            )
+            if not coordinator_running:
+                asyncio.create_task(run_coordinator_task())
+            else:
+                coordinator_pending = True  # Queue it
 
         # Check win/lose condition
         result = check_win_condition()
