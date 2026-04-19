@@ -12,6 +12,8 @@
 
     <script type="module" src="https://js.arcgis.com/5.0/"></script>
     <script type="module">
+        import { initMapMarkers } from './map_handler.js';
+        
         const [Map, SceneView] = await $arcgis.import([
             "@arcgis/core/Map.js",
             "@arcgis/core/views/SceneView.js",
@@ -43,14 +45,45 @@
             },
             ui: { components: [] }
         });
+        
+        // Initialize map markers when view is ready
+        view.when(() => {
+            initMapMarkers(view);
+        });
+        
+        // Expose view globally for other modules
+        window.arcgisView = view;
     </script>
 
     <script type="module" src="socket_handler.js"></script>
     <script type="module" src="ui_updates.js"></script>
+    <script type="module" src="opening_screen.js"></script>
 </head>
 
 <body>
     <div id="viewDiv"></div>
+
+    <!-- Opening Screen Overlay -->
+    <div id="openingScreen" class="opening-overlay">
+        <div class="opening-content">
+            <div class="opening-image-container">
+                <!-- Placeholder for deep sea image -->
+                <div class="deep-sea-placeholder"></div>
+            </div>
+            <div class="opening-text-section">
+                <h1 class="opening-title">PATHOGEN RESPONSE SYSTEM</h1>
+                <div class="virus-story" id="virusStory">
+                    <p class="story-loading">Generating outbreak report...</p>
+                </div>
+                <div class="country-selection">
+                    <h2 class="selection-title">SELECT DEPLOYMENT ZONE</h2>
+                    <div class="country-buttons" id="countryButtons">
+                        <!-- Buttons will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="sidePanel">
         <div class="panel-header">Pathogen Response System</div>
@@ -73,6 +106,14 @@
             <div class="stat-row">
                 <span class="stat-label">Total Deaths</span>
                 <span class="stat-value deaths" id="stat-deaths">--</span>
+            </div>
+        </div>
+
+        <!-- Country Data Section -->
+        <div class="countries-section" id="countriesSection">
+            <div class="log-header">Country Status</div>
+            <div class="countries-list" id="countriesList">
+                <!-- Country cards will be populated by JavaScript -->
             </div>
         </div>
 

@@ -15,7 +15,7 @@ import random
 
 # Base rates
 BASE_TRANSMISSION = 0.005
-BASE_MORTALITY = 0.000001  # nerf mortality
+BASE_MORTALITY = 0.000001
 MUTATION_INTERVAL = 10
 
 
@@ -98,9 +98,23 @@ def calculate_spread(country_name, world_state):
     if country["food_water_supply"] < 0.3:
         effective_transmission *= 1.20
 
+    # Vaccine reduces transmission as it progresses (immunity effect)
+    vaccine_progress = world_state["global_vaccine_progress"]
+    if vaccine_progress > 0:
+        # Vaccine reduces transmission by up to 70% when fully deployed
+        vaccine_transmission_reduction = vaccine_progress * 0.7
+        effective_transmission *= 1.0 - vaccine_transmission_reduction
+
     # SIR delta: new infections this tick
     new_infected = effective_transmission * susceptible * infected
     country["infected"] = min(infected + new_infected, 1.0)
+
+    # Vaccine also helps recover infected population (they become immune)
+    if vaccine_progress > 0.3:  # Vaccine starts helping recovery after 30% progress
+        recovery_rate = (
+            vaccine_progress - 0.3
+        ) * 0.02  # Up to 1.4% recovery per tick at 100%
+        country["infected"] = max(country["infected"] - recovery_rate, 0.0)
 
 
 def calculate_deaths(country_name, world_state):

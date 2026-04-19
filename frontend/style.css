@@ -105,6 +105,127 @@ html, body {
     background: linear-gradient(90deg, var(--accent-yellow), var(--accent-red));
 }
 
+/* ========================================
+   COUNTRY STATUS SECTION
+   ======================================== */
+
+.countries-section {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--border);
+    max-height: 300px;
+    overflow: hidden;
+}
+
+.countries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 20px;
+    overflow-y: auto;
+}
+
+.country-card {
+    background: rgba(30, 45, 69, 0.3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    transition: all 0.3s ease;
+}
+
+.country-card:hover {
+    background: rgba(30, 45, 69, 0.5);
+    border-color: var(--accent-blue);
+}
+
+.country-card.infected {
+    border-left: 3px solid var(--accent-yellow);
+}
+
+.country-card.critical {
+    border-left: 3px solid var(--accent-red);
+}
+
+.country-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.country-name {
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: var(--text-primary);
+}
+
+.country-population {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.country-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.country-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.country-stat-label {
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.country-stat-value {
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.country-stat-value.infected { color: var(--accent-yellow); }
+.country-stat-value.gdp { color: var(--accent-green); }
+.country-stat-value.containment { color: var(--accent-blue); }
+.country-stat-value.deaths { color: var(--accent-red); }
+.country-stat-value.vaccine { color: var(--accent-purple); }
+
+.country-infrastructure {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.infra-badge {
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.infra-badge.open {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--accent-green);
+}
+
+.infra-badge.closed {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--accent-red);
+}
+
+/* Scrollbar for countries list */
+.countries-list::-webkit-scrollbar { width: 3px; }
+.countries-list::-webkit-scrollbar-track { background: transparent; }
+.countries-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
 .log-section {
     flex: 1;
     display: flex;
@@ -114,7 +235,7 @@ html, body {
 
 .log-header {
     padding: 12px 20px;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 2px;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -141,11 +262,11 @@ html, body {
 
 .log-entry.active { border-left-color: var(--accent-blue); }
 .log-entry.virus { border-left-color: var(--accent-purple); }
-.log-tick { font-size: 10px; color: var(--accent-blue); letter-spacing: 1px; }
+.log-tick { font-size: 16px; color: var(--accent-blue); letter-spacing: 1px; }
 .log-tick.virus { color: var(--accent-purple); }
-.log-thought { font-size: 11px; color: var(--text-primary); line-height: 1.5; white-space: pre-wrap; }
-.log-message { font-size: 11px; color: var(--text-primary); line-height: 1.5; }
-.log-actions { font-size: 10px; color: var(--accent-yellow); line-height: 1.6; margin-top: 4px; }
+.log-thought { font-size: 14px; color: var(--text-primary); line-height: 1.5; white-space: pre-wrap; }
+.log-message { font-size: 14px; color: var(--text-primary); line-height: 1.5; }
+.log-actions { font-size: 14px; color: var(--accent-yellow); line-height: 1.6; margin-top: 4px; }
 .log-actions span { display: inline-block; background: rgba(234, 179, 8, 0.15); padding: 2px 6px; border-radius: 3px; margin-right: 4px; }
 .log-message.mutation { color: var(--accent-purple); }
 .log-message.deploy { color: var(--accent-green); }
@@ -163,3 +284,298 @@ html, body {
 .log-feed::-webkit-scrollbar { width: 3px; }
 .log-feed::-webkit-scrollbar-track { background: transparent; }
 .log-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ========================================
+   OPENING SCREEN - OCEAN THEME
+   ======================================== */
+
+.opening-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, 
+        #0a1628 0%, 
+        #0d2137 30%, 
+        #0f2847 60%, 
+        #062234 100%);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: oceanWave 8s ease-in-out infinite;
+}
+
+@keyframes oceanWave {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.opening-overlay.hidden {
+    display: none;
+}
+
+.opening-content {
+    display: flex;
+    flex-direction: row;
+    max-width: 1200px;
+    width: 90%;
+    height: 80%;
+    gap: 40px;
+    align-items: center;
+}
+
+.opening-image-container {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.deep-sea-placeholder {
+    width: 100%;
+    height: 80%;
+    max-width: 500px;
+    background: linear-gradient(135deg, 
+        #0a3d62 0%, 
+        #1e5f74 25%, 
+        #133b5c 50%, 
+        #1a5276 75%, 
+        #0d3d56 100%);
+    border-radius: 12px;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    box-shadow: 
+        0 0 60px rgba(59, 130, 246, 0.2),
+        inset 0 0 100px rgba(10, 61, 98, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.deep-sea-placeholder::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at center, 
+        rgba(59, 130, 246, 0.1) 0%, 
+        transparent 70%);
+    animation: deepGlow 4s ease-in-out infinite;
+}
+
+@keyframes deepGlow {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+.opening-text-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 20px;
+}
+
+.opening-title {
+    font-family: var(--font);
+    font-size: 28px;
+    letter-spacing: 6px;
+    color: #4fc3f7;
+    text-transform: uppercase;
+    text-shadow: 0 0 20px rgba(79, 195, 247, 0.5);
+    margin: 0;
+}
+
+.virus-story {
+    background: rgba(10, 30, 50, 0.6);
+    border: 1px solid rgba(79, 195, 247, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 150px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.virus-story p {
+    color: #ffffff;
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.8;
+    margin: 0;
+}
+
+.story-loading {
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-style: italic;
+}
+
+.country-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.selection-title {
+    font-family: var(--font);
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.country-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.country-btn {
+    font-family: var(--font);
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 14px 20px;
+    background: rgba(10, 30, 50, 0.8);
+    border: 1px solid rgba(79, 195, 247, 0.3);
+    border-radius: 6px;
+    color: #4fc3f7;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.country-btn:hover {
+    background: rgba(79, 195, 247, 0.2);
+    border-color: #4fc3f7;
+    box-shadow: 0 0 20px rgba(79, 195, 247, 0.3);
+    transform: translateY(-2px);
+}
+
+.country-btn:active {
+    transform: translateY(0);
+}
+
+.country-btn.deploying {
+    background: rgba(79, 195, 247, 0.3);
+    color: #ffffff;
+    pointer-events: none;
+}
+
+/* Scrollbar for virus story */
+.virus-story::-webkit-scrollbar { width: 4px; }
+.virus-story::-webkit-scrollbar-track { background: rgba(10, 30, 50, 0.3); }
+.virus-story::-webkit-scrollbar-thumb { background: rgba(79, 195, 247, 0.3); border-radius: 2px; }
+
+/* ========================================
+   ARCGIS POPUP STYLES - OCEAN THEME
+   ======================================== */
+
+.esri-popup__main-container {
+    background: linear-gradient(180deg, #0d2137 0%, #0a1628 100%) !important;
+    border: 1px solid rgba(79, 195, 247, 0.3) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 0 30px rgba(79, 195, 247, 0.2) !important;
+    font-family: var(--font) !important;
+}
+
+.esri-popup__header {
+    background: rgba(10, 30, 50, 0.8) !important;
+    border-bottom: 1px solid rgba(79, 195, 247, 0.2) !important;
+}
+
+.esri-popup__header-title {
+    color: #4fc3f7 !important;
+    font-family: var(--font) !important;
+    font-size: 14px !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+}
+
+.esri-popup__content {
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+.esri-popup__button {
+    color: #4fc3f7 !important;
+}
+
+.esri-popup__button:hover {
+    background: rgba(79, 195, 247, 0.1) !important;
+}
+
+.esri-popup__pointer-direction {
+    background: #0d2137 !important;
+}
+
+/* Custom popup content styles */
+.country-popup {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 250px;
+}
+
+.popup-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.popup-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.popup-value {
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #f1f5f9;
+}
+
+.popup-value.containment { color: #3b82f6; }
+.popup-value.infected { color: #eab308; }
+.popup-value.vaccine { color: #a855f7; }
+.popup-value.population { color: #22c55e; }
+.popup-value.open { color: #22c55e; }
+.popup-value.closed { color: #ef4444; }
+
+.popup-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.popup-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+.popup-bar-fill.containment {
+    background: linear-gradient(90deg, #1e40af, #3b82f6);
+}
+
+.popup-bar-fill.infected {
+    background: linear-gradient(90deg, #eab308, #ef4444);
+}
+
+.popup-bar-fill.vaccine {
+    background: linear-gradient(90deg, #7c3aed, #a855f7);
+}
+
+.popup-loading {
+    padding: 20px;
+    color: #64748b;
+    font-style: italic;
+    text-align: center;
+}

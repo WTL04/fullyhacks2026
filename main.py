@@ -250,6 +250,39 @@ async def ping():
     return {"status": "ok", "tick": world_state["tick"]}
 
 
+@app.post("/generate-story")
+async def generate_story():
+    """Generate a virus origin story using GenAI."""
+    try:
+        from google import genai
+        import os
+
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+        prompt = """Write a hilarious 1-sentence reason for a new virus outbreak.
+Keep it short like a new/article headline.
+Explain that the virus started because someone did something stupid in the ocean. 
+Reference things like Spongebob Squarepants, the lost city of Atlantis, the Bermuda Triangle, or the Mariana Trench. 
+The tone should be completely unserious and chaotic. Maybe someone even ate a sea star and turned into one.
+Output only the story text, nothing else."""
+
+        response = client.models.generate_content(
+            model="gemma-4-26b-a4b-it", contents=prompt
+        )
+
+        story = (
+            response.text.strip()
+            if response.text
+            else "CLASSIFIED: Origin unknown. Deep-sea anomaly detected."
+        )
+        return {"status": "success", "story": story}
+    except Exception as e:
+        print(f"Story generation error: {e}")
+        return JSONResponse(
+            status_code=500, content={"status": "failed", "message": str(e)}
+        )
+
+
 # --- Static Frontend ---
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
