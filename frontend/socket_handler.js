@@ -1,4 +1,6 @@
-const socket = io();
+const socket = io(
+  transports=["websockets"]
+);
 
 socket.on('connect', () => {
     console.log('Socket connected:', socket.id);
