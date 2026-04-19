@@ -46,7 +46,6 @@ load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 model = "gemini-2.5-flash"
-
 conversation_history = []
 
 
@@ -59,7 +58,7 @@ def get_infrastructure_risks(world_state):
 
     for code, airport in AIRPORTS.items():
         # track current closed airports
-        if world_state["airport_status"].get(code, False):
+        if not world_state["airport_status"].get(code, True):
             closed_airports.append(code)
             continue
 
@@ -74,7 +73,7 @@ def get_infrastructure_risks(world_state):
 
     for code, port in PORTS.items():
         # track current closed ports
-        if world_state["port_status"].get(code, False):
+        if not world_state["port_status"].get(code, True):
             closed_ports.append(code)
             continue 
 
@@ -144,6 +143,7 @@ def compress_state(world_state):
     return f"{header}\n\n{country_table}\n\nINFRASTRUCTURE RISK:\n{risk_summary}"
 
 
+# --- Coordinator Model --- 
 async def run_coordinator(world_state, sio=None):
     # TODO:
     """
@@ -153,5 +153,8 @@ async def run_coordinator(world_state, sio=None):
     → directives execute instantly in Python
     """
 
+    current_state = compress_state(world_state)
+    return current_state
 
-print(response.text)
+if __name__ == "__main__":
+    print(compress_state(world_state))
