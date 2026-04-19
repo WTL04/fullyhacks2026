@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://js.arcgis.com/5.0/esri/themes/dark/main.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
-    <script src = "https://cdn.socket.io/4.2.7/socket.io.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
     <style>
         * {
@@ -210,11 +210,16 @@
                 atmosphereEnabled: true,
                 starsEnabled: true
             },
-            ui: { components: [] } /* Removes default zoom controls for a cleaner UI */
+            ui: { components: [] }
         });
+    </script>
 
-
+    <script>
         const socket = io();
+
+        socket.on('connect', () => {
+            console.log('Socket connected:', socket.id);
+        });
 
         socket.on('state_update', (data) => {
             if (!data) return;
@@ -235,7 +240,6 @@
             if (data.evolution_points != null) document.getElementById('footer-evo').innerText = data.evolution_points;
         });
 
-        // Update Coordinator logs
         socket.on('action_results', (results) => {
             const feed = document.getElementById('log-feed');
             results.forEach(res => {
@@ -246,12 +250,9 @@
             });
         });
 
-
         function sendAction(type, target, value) {
             socket.emit('user_action', { type, target, value });
         }
-
-
     </script>
 </head>
 
