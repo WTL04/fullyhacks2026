@@ -14,8 +14,8 @@ Determines Mutation given:
 import random
 
 # Base rates
-BASE_TRANSMISSION = 0.01
-BASE_MORTALITY = 0.001
+BASE_TRANSMISSION = 0.1
+BASE_MORTALITY = 0.01
 MUTATION_INTERVAL = 10
 
 
