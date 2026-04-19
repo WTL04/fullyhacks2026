@@ -14,9 +14,9 @@ Determines Mutation given:
 import random
 
 # Base rates
-BASE_TRANSMISSION = random.uniform(0.03, 0.13)
-BASE_MORTALITY = random.uniform(0.002, 0.001)
-MUTATION_INTERVAL = random.randint(5, 20)  # ticks
+BASE_TRANSMISSION = 0.05
+BASE_MORTALITY = 0.002
+MUTATION_INTERVAL = 10
 
 
 def get_airport_modifier(country_name, world_state):
@@ -31,7 +31,7 @@ def get_airport_modifier(country_name, world_state):
     for other_name, other in countries.items():
         if other_name != country_name and other["infected"] > 0.01:
             modifier += 0.30
-    
+
     return modifier
 
 
@@ -47,7 +47,7 @@ def get_port_modifier(country_name, world_state):
     for other_name, other in countries.items():
         if other_name != country_name and other["infected"] > 0.01:
             modifier += 0.15
-            
+
     return modifier
 
 
@@ -125,6 +125,15 @@ def calculate_deaths(country_name, world_state):
     country["gdp"] = max(country["gdp"] - (death_ratio * 0.01), 0.0)
 
 
+MUTATION_TABLE = [
+    ("airborne", 0.15),
+    ("drug_resistance", 0.20),
+    ("increased_lethality", 0.10),
+    ("symptom_suppression", 0.25),
+    ("faster_incubation", 0.20),
+]
+
+
 def mutation_roll(world_state):
     """Stochastic mutation check. Runs every MUTATION_INTERVAL ticks."""
     mutations = world_state["active_mutations"]
@@ -138,15 +147,7 @@ def mutation_roll(world_state):
     time_factor = 1 + (world_state["tick"] / 365) * 0.5
     mutation_chance = global_infected * time_factor
 
-    mutation_table = [
-        ("airborne", 0.15),
-        ("drug_resistance", 0.20),
-        ("increased_lethality", 0.10),
-        ("symptom_suppression", 0.25),
-        ("faster_incubation", 0.20),
-    ]
-
-    for mutation_name, base_chance in mutation_table:
+    for mutation_name, base_chance in MUTATION_TABLE:
         if mutation_name not in mutations:
             if random.random() < base_chance * mutation_chance:
                 mutations.append(mutation_name)
