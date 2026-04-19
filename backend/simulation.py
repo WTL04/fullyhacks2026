@@ -253,7 +253,8 @@ def recover_gdp(world_state):
 
 
 def apply_spread_tick(world_state):
-    """Main tick function. Call this every second from the tick loop."""
+    """Main tick function. Call this every second from the tick loop.
+    Returns mutation name if one occurred, otherwise None."""
     world_state["tick"] += 1
 
     # get current spread & deaths
@@ -266,9 +267,10 @@ def apply_spread_tick(world_state):
     tick_drug_resistance_counter(world_state)
     recover_gdp(world_state)
 
-    # Mutation check every 7 ticks
+    # Mutation check every MUTATION_INTERVAL ticks
+    mutation = None
     if world_state["tick"] % MUTATION_INTERVAL == 0:
-        mutation_roll(world_state)
+        mutation = mutation_roll(world_state)
 
     # Evolution points accumulate for user
     global_infected = sum(
@@ -276,3 +278,5 @@ def apply_spread_tick(world_state):
     ) / sum(c["population"] for c in world_state["countries"].values())
 
     world_state["evolution_points"] += global_infected
+    
+    return mutation

@@ -14,9 +14,11 @@ const COUNTRY_COORDS = {
 };
 
 let graphicsLayer = null;
+let connectionsLayer = null;
 let view = null;
 let latestCountryData = {};
 let globalVaccineProgress = 0;
+let activeConnections = []; // Track active connection lines
 
 // Initialize map with country markers
 async function initMapMarkers(sceneView) {
@@ -30,6 +32,12 @@ async function initMapMarkers(sceneView) {
         "@arcgis/core/symbols/TextSymbol.js",
         "@arcgis/core/PopupTemplate.js"
     ]);
+    
+    // Create graphics layer for connection lines (added first so it's behind markers)
+    connectionsLayer = new GraphicsLayer({
+        id: 'countryConnections'
+    });
+    view.map.add(connectionsLayer);
     
     // Create graphics layer for country markers
     graphicsLayer = new GraphicsLayer({
@@ -108,6 +116,12 @@ async function initMapMarkers(sceneView) {
     
     // Listen for state updates to update markers
     socket.on('state_update', updateMapMarkers);
+    
+    // Listen for connection events (foreign_aid and share_data)
+    socket.on('country_connection', handleConnectionEvent);
+    
+    // Clear connections on simulation reset
+    socket.on('simulation_reset', clearConnections);
 }
 
 // Generate popup content dynamically
@@ -260,4 +274,119 @@ function getMarkerStyle(infected) {
     }
 }
 
-export { initMapMarkers, COUNTRY_COORDS };
+// Handle connection events from backend
+async function handleConnectionEvent(data) {
+    const { source, target, type } = data;
+    
+    if (!COUNTRY_COORDS[source] || !COUNTRY_COORDS[target]) {
+        console.warn(`Unknown country in connection: ${source} or ${target}`);
+        return;
+    }
+    
+    await drawConnectionLine(source, target, type);
+}
+
+// Draw a geodesic line between two countries
+async function drawConnectionLine(sourceCountry, targetCountry, connectionType) {
+    if (!connectionsLayer) return;
+    
+    const [Graphic, Polyline, SimpleLineSymbol, geometryEngine] = await $arcgis.import([
+        "@arcgis/core/Graphic.js",
+        "@arcgis/core/geometry/Polyline.js",
+        "@arcgis/core/symbols/SimpleLineSymbol.js",
+        "@arcgis/core/geometry/geometryEngine.js"
+    ]);
+    
+    const sourceCoords = COUNTRY_COORDS[sourceCountry];
+    const targetCoords = COUNTRY_COORDS[targetCountry];
+    
+    // Create connection key to track duplicates
+    const connectionKey = [sourceCountry, targetCountry].sort().join('-');
+    
+    // Check if connection already exists
+    if (activeConnections.includes(connectionKey + '-' + connectionType)) {
+        return; // Don't draw duplicate lines
+    }
+    activeConnections.push(connectionKey + '-' + connectionType);
+    
+    // Create a geodesic polyline for the great circle path
+    const polyline = new Polyline({
+        paths: [[
+            [sourceCoords.lon, sourceCoords.lat],
+            [targetCoords.lon, targetCoords.lat]
+        ]],
+        spatialReference: { wkid: 4326 }
+    });
+    
+    // Densify the line to make it follow the geodesic (great circle) path
+    const geodesicLine = geometryEngine.geodesicDensify(polyline, 100000); // 100km segments
+    
+    // Different styles for different connection types
+    let lineColor, lineWidth, lineStyle;
+    if (connectionType === 'foreign_aid') {
+        // Gold/yellow for foreign aid (money flow)
+        lineColor = [255, 215, 0, 0.8]; // Gold
+        lineWidth = 3;
+        lineStyle = 'solid';
+    } else if (connectionType === 'share_data') {
+        // Cyan/blue for data sharing (information flow)
+        lineColor = [0, 255, 255, 0.8]; // Cyan
+        lineWidth = 2;
+        lineStyle = 'dash';
+    } else {
+        // Default white
+        lineColor = [255, 255, 255, 0.6];
+        lineWidth = 2;
+        lineStyle = 'solid';
+    }
+    
+    const lineSymbol = new SimpleLineSymbol({
+        color: lineColor,
+        width: lineWidth,
+        style: lineStyle
+    });
+    
+    const lineGraphic = new Graphic({
+        geometry: geodesicLine,
+        symbol: lineSymbol,
+        attributes: {
+            source: sourceCountry,
+            target: targetCountry,
+            type: connectionType,
+            connectionKey: connectionKey
+        }
+    });
+    
+    connectionsLayer.add(lineGraphic);
+    
+    // Add animated glow effect by adding a second wider line behind
+    const glowSymbol = new SimpleLineSymbol({
+        color: [...lineColor.slice(0, 3), 0.3], // Same color but more transparent
+        width: lineWidth + 4,
+        style: 'solid'
+    });
+    
+    const glowGraphic = new Graphic({
+        geometry: geodesicLine,
+        symbol: glowSymbol,
+        attributes: {
+            source: sourceCountry,
+            target: targetCountry,
+            type: connectionType + '_glow',
+            connectionKey: connectionKey
+        }
+    });
+    
+    // Add glow behind the main line
+    connectionsLayer.graphics.unshift(glowGraphic);
+}
+
+// Clear all connection lines (useful for game reset)
+function clearConnections() {
+    if (connectionsLayer) {
+        connectionsLayer.removeAll();
+    }
+    activeConnections = [];
+}
+
+export { initMapMarkers, COUNTRY_COORDS, drawConnectionLine, clearConnections };

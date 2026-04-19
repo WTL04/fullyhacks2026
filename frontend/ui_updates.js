@@ -1,4 +1,4 @@
-import { socket } from './socket_handler.js';
+import { socket, sendAction } from './socket_handler.js';
 
 function updateStats(data) {
     if (!data) return;
@@ -122,12 +122,17 @@ function updateCoordinatorLog(data) {
 
 function updateVirusLog(data) {
     const feed = document.getElementById('virus-feed');
+    if (!feed) {
+        console.warn('virus-feed element not found');
+        return;
+    }
     const { tick, message, type } = data;
     const entry = document.createElement('div');
     entry.className = 'log-entry virus';
     const colorClass = type === 'mutation' ? 'mutation' : 'deploy';
     entry.innerHTML = `<div class="log-tick virus">TICK ${tick}</div><div class="log-message ${colorClass}">${message}</div>`;
     feed.prepend(entry);
+    console.log('Virus log updated:', data);
 }
 
 socket.on('state_update', updateStats);

@@ -13,8 +13,11 @@ COSTS = {
 
 
 # ── Result helpers ─────────────────────────────────────────────────────────────
-def _ok(message: str):
-    return {"status": "success", "message": message}
+def _ok(message: str, connection=None):
+    result = {"status": "success", "message": message}
+    if connection:
+        result["connection"] = connection
+    return result
 
 
 def _fail(message: str):
@@ -270,7 +273,8 @@ def share_data(target: str, value: str) -> dict:
     return _ok(
         f"Data shared between {target} and {value}: "
         f"+{boost * 100:.0f}% global vaccine progress "
-        f"(GDP -{gdp_cost}, pair locked for rest of game)"
+        f"(GDP -{gdp_cost}, pair locked for rest of game)",
+        connection={"source": target, "target": value, "type": "share_data"}
     )
 
 
@@ -359,7 +363,8 @@ def foreign_aid(target: str, value: str) -> dict:
     return _ok(
         f"{target} sent foreign aid to {value} "
         f"(donor GDP -{transfer_cost:.3f}, "
-        f"recipient GDP +{recipient_gain:.3f})"
+        f"recipient GDP +{recipient_gain:.3f})",
+        connection={"source": target, "target": value, "type": "foreign_aid"}
     )
 
 

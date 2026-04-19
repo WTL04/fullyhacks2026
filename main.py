@@ -34,6 +34,11 @@ async def coordinator_loop():
             await asyncio.sleep(1)
             continue
 
+        # Check if simulation is paused
+        if world_state.get("simulation_paused", False):
+            await asyncio.sleep(0.5)
+            continue
+
         current_tick = world_state["tick"]
 
         # Only run if we've advanced to a new tick that needs coordinator
@@ -45,6 +50,12 @@ async def coordinator_loop():
             thought, actions = await run_coordinator(latest_state, sio)
             results = dispatch_directives(actions)
             world_state["last_action_results"] = results
+
+            # Emit connection events for foreign_aid and share_data
+            for result in results:
+                if result.get("status") == "success" and result.get("connection"):
+                    await sio.emit("country_connection", result["connection"])
+
             await sio.emit(
                 "action_results",
                 {
@@ -69,6 +80,11 @@ async def tick_loop():
     while world_state.get("game_status") is None:
         # Wait for user to deploy virus before starting
         if not world_state["simulation_running"]:
+            await asyncio.sleep(0.5)
+            continue
+
+        # Check if simulation is paused
+        if world_state.get("simulation_paused", False):
             await asyncio.sleep(0.5)
             continue
 
@@ -239,6 +255,34 @@ async def reset_simulation():
     return {"status": "success"}
 
 
+@app.post("/pause")
+async def pause_simulation():
+    """Pause the simulation."""
+    if not world_state["simulation_running"]:
+        return JSONResponse(
+            status_code=400,
+            content={"status": "failed", "message": "Simulation not running"},
+        )
+    world_state["simulation_paused"] = True
+    await sio.emit("simulation_paused", {"paused": True})
+    print("Simulation paused")
+    return {"status": "success", "paused": True}
+
+
+@app.post("/resume")
+async def resume_simulation():
+    """Resume the simulation."""
+    if not world_state["simulation_running"]:
+        return JSONResponse(
+            status_code=400,
+            content={"status": "failed", "message": "Simulation not running"},
+        )
+    world_state["simulation_paused"] = False
+    await sio.emit("simulation_paused", {"paused": False})
+    print("Simulation resumed")
+    return {"status": "success", "paused": False}
+
+
 @app.post("/speed")
 async def set_speed(data: dict):
     world_state["speed_multiplier"] = data.get("multiplier", 1)
@@ -248,39 +292,6 @@ async def set_speed(data: dict):
 @app.get("/ping")
 async def ping():
     return {"status": "ok", "tick": world_state["tick"]}
-
-
-@app.post("/generate-story")
-async def generate_story():
-    """Generate a virus origin story using GenAI."""
-    try:
-        from google import genai
-        import os
-
-        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-
-        prompt = """Write a hilarious 1-sentence reason for a new virus outbreak.
-Keep it short like a new/article headline.
-Explain that the virus started because someone did something stupid in the ocean. 
-Reference things like Spongebob Squarepants, the lost city of Atlantis, the Bermuda Triangle, or the Mariana Trench. 
-The tone should be completely unserious and chaotic. Maybe someone even ate a sea star and turned into one.
-Output only the story text, nothing else."""
-
-        response = client.models.generate_content(
-            model="gemma-4-26b-a4b-it", contents=prompt
-        )
-
-        story = (
-            response.text.strip()
-            if response.text
-            else "CLASSIFIED: Origin unknown. Deep-sea anomaly detected."
-        )
-        return {"status": "success", "story": story}
-    except Exception as e:
-        print(f"Story generation error: {e}")
-        return JSONResponse(
-            status_code=500, content={"status": "failed", "message": str(e)}
-        )
 
 
 # --- Static Frontend ---

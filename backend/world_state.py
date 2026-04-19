@@ -5,6 +5,7 @@ world_state = {
     "tick": 0,
     "game_status": None,
     "simulation_running": False,
+    "simulation_paused": False,
     "speed_multiplier": 1,
     "last_user_action": None,
     "last_action_results": [],
@@ -160,6 +161,7 @@ def check_win_condition():
 def initialize_simulation():
     """Initializes the simulation state. Patient Zero is now determined by the user."""
     world_state["simulation_running"] = False
+    world_state["simulation_paused"] = False
     world_state["tick"] = 0
     world_state["game_status"] = None
     world_state["active_mutations"] = []

@@ -58,6 +58,7 @@
     <script type="module" src="socket_handler.js"></script>
     <script type="module" src="ui_updates.js"></script>
     <script type="module" src="opening_screen.js"></script>
+    <script type="module" src="simulation_controls.js"></script>
 </head>
 
 <body>
@@ -66,23 +67,24 @@
     <!-- Opening Screen Overlay -->
     <div id="openingScreen" class="opening-overlay">
         <div class="opening-content">
-            <div class="opening-image-container">
-                <!-- Placeholder for deep sea image -->
-                <div class="deep-sea-placeholder"></div>
-            </div>
-            <div class="opening-text-section">
-                <h1 class="opening-title">PATHOGEN RESPONSE SYSTEM</h1>
-                <div class="virus-story" id="virusStory">
-                    <p class="story-loading">Generating outbreak report...</p>
-                </div>
-                <div class="country-selection">
-                    <h2 class="selection-title">SELECT DEPLOYMENT ZONE</h2>
-                    <div class="country-buttons" id="countryButtons">
-                        <!-- Buttons will be populated by JavaScript -->
-                    </div>
+            <h1 class="opening-title">PATHOGEN RESPONSE SYSTEM</h1>
+            <div class="country-selection">
+                <h2 class="selection-title">SELECT DEPLOYMENT ZONE</h2>
+                <div class="country-buttons" id="countryButtons">
+                    <!-- Buttons will be populated by JavaScript -->
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Simulation Controls (shown during simulation) -->
+    <div id="simulationControls" style="position: fixed; bottom: 20px; left: 20px; z-index: 999; display: flex; gap: 10px;">
+        <button id="pauseResumeBtn" style="background: rgba(234, 179, 8, 0.2); border: 1px solid #eab308; color: #eab308; padding: 10px 20px; font-family: monospace; font-size: 12px; cursor: pointer; border-radius: 4px;">
+            PAUSE
+        </button>
+        <button id="resetBtn" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; padding: 10px 20px; font-family: monospace; font-size: 12px; cursor: pointer; border-radius: 4px;">
+            RESET
+        </button>
     </div>
 
     <div id="sidePanel">
