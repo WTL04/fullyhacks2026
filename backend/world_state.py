@@ -10,7 +10,7 @@ world_state = {
     "last_user_action": None,
     "last_action_results": [],
     "active_mutations": [],
-    "evolution_points": 0,
+    "evolution_points": 50,
     "global_vaccine_progress": 0.0,
     "research_boosts": {},  # {"Brazil": {"multiplier": 1.5, "ticks_remaining": 10}}
     "shared_data_pairs": [],  # ["USA-Brazil", "Canada-USA"]
@@ -165,7 +165,7 @@ def initialize_simulation():
     world_state["tick"] = 0
     world_state["game_status"] = None
     world_state["active_mutations"] = []
-    world_state["evolution_points"] = 0.0
+    world_state["evolution_points"] = 50
     world_state["global_vaccine_progress"] = 0.0
     world_state["last_user_action"] = None
     world_state["last_action_results"] = []

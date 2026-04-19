@@ -14,8 +14,8 @@ Determines Mutation given:
 import random
 
 # Base rates
-BASE_TRANSMISSION = 0.1
-BASE_MORTALITY = 0.01
+BASE_TRANSMISSION = 0.01
+BASE_MORTALITY = 0.00001
 MUTATION_INTERVAL = 10
 
 
@@ -86,13 +86,23 @@ def calculate_spread(country_name, world_state):
         transmission *= 1.5
     if "faster_incubation" in mutations:
         transmission *= 2.0
+    if "environmental_persistence" in mutations:
+        transmission *= 1.2
+    if "asymptomatic_spread" in mutations:
+        transmission *= 2.0
+    if "animal_reservoir" in mutations:
+        transmission *= 1.3
 
     # Border modifiers
     border_modifier = get_transmission_modifier(country_name, world_state)
     effective_transmission = transmission * (1 + border_modifier)
 
     # Containment reduces spread
-    effective_transmission *= 1.0 - country["containment_level"]
+    containment = country["containment_level"]
+    if "environmental_persistence" in mutations:
+        containment *= 0.8
+    effective_transmission *= 1.0 - containment
+
 
     # Malnourished population spreads faster
     if country["food_water_supply"] < 0.3:
@@ -125,6 +135,9 @@ def calculate_deaths(country_name, world_state):
     mortality = BASE_MORTALITY
     if "increased_lethality" in mutations:
         mortality += 0.005
+    if "asymptomatic_spread" in mutations:
+        mortality *= 0.5
+
 
     # Vaccine reduces mortality
     vaccine_effect = world_state["global_vaccine_progress"] * 0.8
@@ -144,7 +157,10 @@ MUTATION_TABLE = [
     ("drug_resistance", 0.20),
     ("increased_lethality", 0.10),
     ("symptom_suppression", 0.25),
-    ("faster_incubation", 0.20),
+    ("faster_incubation", 00.20),
+    ("environmental_persistence", 0.15),
+    ("asymptomatic_spread", 0.10),
+    ("animal_reservoir", 0.20),
 ]
 
 
@@ -200,10 +216,13 @@ def update_vaccine_progress(world_state):
 
         total_research += base * multiplier
 
-    vaccine_delta = total_research * 0.0005 * effectiveness
+    vaccine_delta = total_research * 00.0005 * effectiveness
+    if "animal_reservoir" in world_state["active_mutations"]:
+        vaccine_delta *= 0.7
     world_state["global_vaccine_progress"] = min(
         world_state["global_vaccine_progress"] + vaccine_delta, 1.0
     )
+
 
 
 def tick_research_boosts(world_state):
@@ -277,6 +296,6 @@ def apply_spread_tick(world_state):
         c["population"] * c["infected"] for c in world_state["countries"].values()
     ) / sum(c["population"] for c in world_state["countries"].values())
 
-    world_state["evolution_points"] += global_infected
+    world_state["evolution_points"] += global_infected * 2.0
 
     return mutation

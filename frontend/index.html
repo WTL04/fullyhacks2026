@@ -65,15 +65,15 @@
     <div id="viewDiv"></div>
 
     <!-- Simulation Controls (shown during simulation) -->
-    <div id="simulationControls" style="position: fixed; bottom: 20px; left: 20px; z-index: 999; display: flex; gap: 10px;">
-
-        <button id="pauseResumeBtn" style="background: rgba(234, 179, 8, 0.2); border: 1px solid #eab308; color: #eab308; padding: 10px 20px; font-family: monospace; font-size: 12px; cursor: pointer; border-radius: 4px;">
+    <div id="simulationControls" style="position: fixed; bottom: 20px; left: 20px; z-index: 10000; display: flex; gap: 10px; pointer-events: auto;">
+        <button id="pauseResumeBtn" style="background: rgba(234, 179, 8, 0.2); border: 1px solid #eab308; color: #eab308; padding: 10px 20px; font-family: monospace; font-size: 12px; cursor: pointer; border-radius: 4px; position: relative; z-index: 10001;">
             PAUSE
         </button>
-        <button id="resetBtn" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; padding: 10px 20px; font-family: monospace; font-size: 12px; cursor: pointer; border-radius: 4px;">
+        <button id="resetBtn" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; padding: 10px 20px; font-family: monospace; font-size: 12px; cursor: pointer; border-radius: 4px; position: relative; z-index: 10001;">
             RESET
         </button>
     </div>
+
 
     <div id="sidePanel">
         <div class="panel-header">Pathogen Response System</div>

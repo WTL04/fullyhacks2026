@@ -167,4 +167,4 @@ async function deployVirus(country, popup) {
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', initOpeningScreen);
 
-export { initOpeningScreen };
+export { initOpeningScreen, showOutbreakReport };

@@ -5,8 +5,8 @@
 }
 
 :root {
-    --bg-primary:   #0a0f1e;
-    --bg-panel:     #000000; /* #111827; */
+    --bg-primary:   #191970;
+    --bg-panel:     #111827;
     --border:       #1e2d45;
     --accent-black: #000000;
     --accent-blue:  #3b82f6;
@@ -69,9 +69,9 @@ html, body {
 }
 
 .stat-label {
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--text-muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #94a3b8;
     text-transform: uppercase;
 }
 
@@ -179,9 +179,9 @@ html, body {
 }
 
 .country-stat-label {
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 1px;
-    color: var(--text-muted);
+    color: #94a3b8;
     text-transform: uppercase;
 }
 
@@ -236,9 +236,9 @@ html, body {
 
 .log-header {
     padding: 12px 20px;
-    font-size: 12px;
-    letter-spacing: 2px;
-    color: var(--text-muted);
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: #cbd5e1;
     text-transform: uppercase;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
@@ -275,9 +275,9 @@ html, body {
 .panel-footer {
     padding: 10px 20px;
     border-top: 1px solid var(--border);
-    font-size: 12px;
-    color: var(--text-muted);
-    letter-spacing: 2px;
+    font-size: 13px;
+    color: #94a3b8;
+    letter-spacing: 1px;
     display: flex;
     justify-content: space-between;
 }
@@ -296,17 +296,11 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(180deg, 
-        #02050a 0%, 
-        #040a15 30%, 
-        #060f20 60%, 
-        #010307 100%);
-
+    background: #0a1628;
     z-index: 1000;
     display: flex;
     justify-content: center;
     align-items: center;
-    animation: oceanWave 8s ease-in-out infinite;
 }
 
 @keyframes oceanWave {
@@ -334,7 +328,6 @@ html, body {
     letter-spacing: 6px;
     color: #4fc3f7;
     text-transform: uppercase;
-    text-shadow: 0 0 20px rgba(79, 195, 247, 0.5);
     margin: 0;
     text-align: center;
 }
@@ -425,16 +418,10 @@ html, body {
 }
 
 .story-popup-container {
-    background: linear-gradient(180deg, 
-        rgba(5, 12, 25, 0.98) 0%, 
-        rgba(2, 5, 10, 0.99) 100%);
-
+    background: #132137;
     border: 1px solid rgba(79, 195, 247, 0.3);
     border-radius: 12px;
-    box-shadow: 
-        0 0 60px rgba(79, 195, 247, 0.2),
-        0 0 100px rgba(10, 30, 50, 0.8),
-        inset 0 1px 0 rgba(79, 195, 247, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     max-width: 500px;
     width: 90%;
     padding: 0;
@@ -475,7 +462,6 @@ html, body {
     color: #4fc3f7;
     text-transform: uppercase;
     margin: 0;
-    text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
 }
 
 .story-popup-location {
@@ -608,8 +594,7 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(2, 5, 10, 0.95);
-
+    background: #0a1628;
     z-index: 2000;
     display: flex;
     justify-content: center;

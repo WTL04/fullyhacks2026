@@ -1,12 +1,11 @@
 // Simulation Controls Handler
 // Manages pause/resume, reset functionality, and Virus Shop
 
-
 import { socket } from './socket_handler.js';
+import { showOutbreakReport } from './opening_screen.js';
 
 let isPaused = false;
 let lastState = null;
-
 
 function initSimulationControls() {
     const pauseResumeBtn = document.getElementById('pauseResumeBtn');
@@ -65,8 +64,6 @@ function initSimulationControls() {
     
     // Listen for simulation events
     socket.on('simulation_started', () => {
-
-
         isPaused = false;
         const pauseResumeBtn = document.getElementById('pauseResumeBtn');
         if (pauseResumeBtn) pauseResumeBtn.textContent = 'PAUSE';
@@ -74,7 +71,6 @@ function initSimulationControls() {
     });
 
     socket.on('action_results', (results) => {
-        // If the shop is open, show the result of the first action in the results array
         if (virusShopPopup && !virusShopPopup.classList.contains('hidden')) {
             const result = results[0];
             if (result) {
@@ -85,7 +81,6 @@ function initSimulationControls() {
     });
     
     socket.on('simulation_paused', (data) => {
-
         isPaused = data.paused;
         updatePauseButton();
     });
@@ -95,7 +90,7 @@ function initSimulationControls() {
         isPaused = false;
         const pauseResumeBtn = document.getElementById('pauseResumeBtn');
         if (pauseResumeBtn) pauseResumeBtn.textContent = 'PAUSE';
-        showOpeningScreen();
+        showOutbreakReport();
     });
     
     socket.on('game_over', () => {
@@ -125,29 +120,11 @@ function hideControls() {
     }
 }
 
-function showOpeningScreen() {
-    const openingScreen = document.getElementById('openingScreen');
-    if (openingScreen) {
-        openingScreen.classList.remove('hidden');
-        openingScreen.style.opacity = '1';
-    }
-    
-    // Re-enable country buttons
-    const buttons = document.querySelectorAll('.country-btn');
-    buttons.forEach(btn => {
-        btn.disabled = false;
-        btn.classList.remove('selected', 'deploying');
-        btn.textContent = btn.dataset.country;
-    });
-}
-
 async function togglePause() {
     const pauseResumeBtn = document.getElementById('pauseResumeBtn');
     if (!pauseResumeBtn) return;
     
     pauseResumeBtn.disabled = true;
-    
-    // Immediately update button for better UX
     isPaused = !isPaused;
     updatePauseButton();
     
@@ -159,15 +136,12 @@ async function togglePause() {
                 'Content-Type': 'application/json'
             }
         });
-        
         const result = await response.json();
-        
         if (result.status === 'success') {
             isPaused = result.paused;
         }
     } catch (error) {
         console.error('Toggle pause error:', error);
-        // Revert on error
         isPaused = !isPaused;
         updatePauseButton();
     } finally {
@@ -178,7 +152,6 @@ async function togglePause() {
 function updatePauseButton() {
     const pauseResumeBtn = document.getElementById('pauseResumeBtn');
     if (!pauseResumeBtn) return;
-    
     if (isPaused) {
         pauseResumeBtn.textContent = 'RESUME';
         pauseResumeBtn.style.background = 'rgba(34, 197, 94, 0.2)';
@@ -195,14 +168,10 @@ function updatePauseButton() {
 async function resetSimulation() {
     const resetBtn = document.getElementById('resetBtn');
     if (!resetBtn) return;
-    
-    // Confirm reset
     if (!confirm('Are you sure you want to reset the simulation?')) {
         return;
     }
-    
     resetBtn.disabled = true;
-    
     try {
         const response = await fetch('/reset', {
             method: 'POST',
@@ -210,11 +179,8 @@ async function resetSimulation() {
                 'Content-Type': 'application/json'
             }
         });
-        
         const result = await response.json();
-        
         if (result.status === 'success') {
-            // Reset will be handled by socket event
             clearLogs();
         }
     } catch (error) {
@@ -227,11 +193,8 @@ async function resetSimulation() {
 function clearLogs() {
     const logFeed = document.getElementById('log-feed');
     const virusFeed = document.getElementById('virus-feed');
-    
     if (logFeed) logFeed.innerHTML = '';
     if (virusFeed) virusFeed.innerHTML = '';
-    
-    // Reset stats display
     document.getElementById('stat-utility').innerText = '--';
     document.getElementById('stat-infected').innerText = '--';
     document.getElementById('stat-deaths').innerText = '--';
@@ -240,18 +203,14 @@ function clearLogs() {
     document.getElementById('footer-day').innerText = '--';
     document.getElementById('footer-vac').innerText = '--';
     document.getElementById('footer-evo').innerText = '--';
-    
-    // Clear country cards
     const countriesList = document.getElementById('countriesList');
     if (countriesList) countriesList.innerHTML = '';
 }
 
 function populateCountrySelect(select) {
     if (!lastState || !lastState.countries) return;
-    
     select.innerHTML = '';
     const countries = Object.keys(lastState.countries).sort();
-    
     countries.forEach(country => {
         const option = document.createElement('option');
         option.value = country;
@@ -260,8 +219,7 @@ function populateCountrySelect(select) {
     });
 }
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', initSimulationControls);
-
+initSimulationControls();
 
 export { initSimulationControls, showControls, hideControls };
+
