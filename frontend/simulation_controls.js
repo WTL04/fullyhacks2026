@@ -1,15 +1,28 @@
 // Simulation Controls Handler
-// Manages pause/resume and reset functionality
+// Manages pause/resume, reset functionality, and Virus Shop
+
 
 import { socket } from './socket_handler.js';
 
 let isPaused = false;
+let lastState = null;
+
 
 function initSimulationControls() {
     const pauseResumeBtn = document.getElementById('pauseResumeBtn');
     const resetBtn = document.getElementById('resetBtn');
     const controlsContainer = document.getElementById('simulationControls');
     
+    // Virus Shop elements
+    const virusShopBtn = document.getElementById('virusShopBtn');
+    const virusShopPopup = document.getElementById('virusShopPopup');
+    const closeShopBtn = document.getElementById('closeShopBtn');
+    const jumpBtn = document.getElementById('jumpBtn');
+    const mutateBtn = document.getElementById('mutateBtn');
+    const jumpCountrySelect = document.getElementById('jumpCountrySelect');
+    const shopResult = document.getElementById('shopResult');
+    const shopEvoValue = document.getElementById('shop-evo-value');
+
     if (pauseResumeBtn) {
         pauseResumeBtn.addEventListener('click', togglePause);
     }
@@ -17,16 +30,62 @@ function initSimulationControls() {
     if (resetBtn) {
         resetBtn.addEventListener('click', resetSimulation);
     }
+
+    if (virusShopBtn) {
+        virusShopBtn.addEventListener('click', () => {
+            populateCountrySelect(jumpCountrySelect);
+            if (shopEvoValue && lastState) {
+                shopEvoValue.innerText = lastState.evolution_points.toFixed(1);
+            }
+            virusShopPopup.classList.remove('hidden');
+            shopResult.innerText = '';
+            shopResult.className = 'shop-result';
+        });
+    }
+
+    if (closeShopBtn) {
+        closeShopBtn.addEventListener('click', () => {
+            virusShopPopup.classList.add('hidden');
+        });
+    }
+
+    if (jumpBtn) {
+        jumpBtn.addEventListener('click', () => {
+            const target = jumpCountrySelect.value;
+            if (!target) return;
+            socket.emit('user_action', { type: 'virus_jump', target: target });
+        });
+    }
+
+    if (mutateBtn) {
+        mutateBtn.addEventListener('click', () => {
+            socket.emit('user_action', { type: 'force_mutation', target: '' });
+        });
+    }
     
     // Listen for simulation events
     socket.on('simulation_started', () => {
+
+
         isPaused = false;
         const pauseResumeBtn = document.getElementById('pauseResumeBtn');
         if (pauseResumeBtn) pauseResumeBtn.textContent = 'PAUSE';
         showControls();
     });
+
+    socket.on('action_results', (results) => {
+        // If the shop is open, show the result of the first action in the results array
+        if (virusShopPopup && !virusShopPopup.classList.contains('hidden')) {
+            const result = results[0];
+            if (result) {
+                shopResult.innerText = result.message;
+                shopResult.className = 'shop-result ' + (result.status === 'success' ? 'success' : 'error');
+            }
+        }
+    });
     
     socket.on('simulation_paused', (data) => {
+
         isPaused = data.paused;
         updatePauseButton();
     });
@@ -41,6 +100,14 @@ function initSimulationControls() {
     
     socket.on('game_over', () => {
         // Optionally hide or disable controls on game over
+    });
+
+    socket.on('state_update', (data) => {
+        lastState = data;
+        const shopEvoValue = document.getElementById('shop-evo-value');
+        if (shopEvoValue) {
+            shopEvoValue.innerText = data.evolution_points.toFixed(1);
+        }
     });
 }
 
@@ -170,7 +237,7 @@ function clearLogs() {
     document.getElementById('stat-deaths').innerText = '--';
     document.getElementById('bar-utility').style.width = '0%';
     document.getElementById('bar-infected').style.width = '0%';
-    document.getElementById('footer-tick').innerText = '--';
+    document.getElementById('footer-day').innerText = '--';
     document.getElementById('footer-vac').innerText = '--';
     document.getElementById('footer-evo').innerText = '--';
     
@@ -179,7 +246,22 @@ function clearLogs() {
     if (countriesList) countriesList.innerHTML = '';
 }
 
+function populateCountrySelect(select) {
+    if (!lastState || !lastState.countries) return;
+    
+    select.innerHTML = '';
+    const countries = Object.keys(lastState.countries).sort();
+    
+    countries.forEach(country => {
+        const option = document.createElement('option');
+        option.value = country;
+        option.textContent = country;
+        select.appendChild(option);
+    });
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', initSimulationControls);
+
 
 export { initSimulationControls, showControls, hideControls };

@@ -130,12 +130,47 @@
         </div>
 
         <div class="panel-footer">
-            <span>TICK: <span id="footer-tick">--</span></span>
+            <button id="virusShopBtn" style="background: rgba(168, 85, 247, 0.2); border: 1px solid #a855f7; color: #a855f7; padding: 4px 8px; font-family: monospace; font-size: 10px; cursor: pointer; border-radius: 4px; margin-right: 10px;">VIRUS SHOP</button>
+            <span>DAY: <span id="footer-day">--</span></span>
             <span>VAC: <span id="footer-vac">--</span></span>
             <span>EVO: <span id="footer-evo">--</span></span>
         </div>
+
     </div>
 
+
+    <!-- Virus Shop Popup -->
+    <div id="virusShopPopup" class="shop-overlay hidden">
+        <div class="shop-container">
+            <div class="shop-header">
+                <h2>VIRUS SHOP</h2>
+                <div class="shop-evo-display">EVO: <span id="shop-evo-value">--</span></div>
+                <button id="closeShopBtn">&times;</button>
+            </div>
+            <div class="shop-content">
+                <div class="shop-item">
+                    <div class="shop-item-info">
+                        <span class="shop-item-name">Virus Jump</span>
+                        <span class="shop-item-cost">25 EVO</span>
+                    </div>
+                    <div class="shop-item-action">
+                        <select id="jumpCountrySelect"></select>
+                        <button id="jumpBtn">JUMP</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-item-info">
+                        <span class="shop-item-name">Force Mutation</span>
+                        <span class="shop-item-cost">30 EVO</span>
+                    </div>
+                    <div class="shop-item-action">
+                        <button id="mutateBtn">MUTATE</button>
+                    </div>
+                </div>
+                <div id="shopResult" class="shop-result"></div>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>

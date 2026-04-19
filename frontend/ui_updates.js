@@ -18,7 +18,7 @@ function updateStats(data) {
         // Update country cards
         updateCountryCards(data.countries, data.global_vaccine_progress);
     }
-    if (data.tick != null) document.getElementById('footer-tick').innerText = data.tick;
+    if (data.tick != null) document.getElementById('footer-day').innerText = data.tick;
     if (data.global_vaccine_progress != null) document.getElementById('footer-vac').innerText = data.global_vaccine_progress.toFixed(2);
     if (data.evolution_points != null) document.getElementById('footer-evo').innerText = data.evolution_points;
 }
@@ -103,11 +103,12 @@ function formatPopulation(pop) {
 }
 
 function updateCoordinatorLog(data) {
+    if (Array.isArray(data)) return;
     const feed = document.getElementById('log-feed');
-    const { thought, actions, tick } = data;
+    const { thought, actions, tick: day } = data;
     const entry = document.createElement('div');
     entry.className = 'log-entry active';
-    let html = `<div class="log-tick">TICK ${tick}</div>`;
+    let html = `<div class="log-day">DAY ${day}</div>`;
     if (thought) html += `<div class="log-thought">${thought}</div>`;
     if (actions && actions.length) {
         html += `<div class="log-actions">`;
@@ -126,11 +127,11 @@ function updateVirusLog(data) {
         console.warn('virus-feed element not found');
         return;
     }
-    const { tick, message, type } = data;
+    const { tick: day, message, type } = data;
     const entry = document.createElement('div');
     entry.className = 'log-entry virus';
     const colorClass = type === 'mutation' ? 'mutation' : 'deploy';
-    entry.innerHTML = `<div class="log-tick virus">TICK ${tick}</div><div class="log-message ${colorClass}">${message}</div>`;
+    entry.innerHTML = `<div class="log-day virus">DAY ${day}</div><div class="log-message ${colorClass}">${message}</div>`;
     feed.prepend(entry);
     console.log('Virus log updated:', data);
 }
