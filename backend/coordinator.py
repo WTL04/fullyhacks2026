@@ -1,7 +1,5 @@
 # backend/coordinator.py
 """
-TODO:
-
 coordinator.py
 │
 ├── CONSTANTS & CLIENT SETUP
@@ -42,6 +40,7 @@ from backend.world_state import (
 
 load_dotenv()
 
+print("GEMINI KEY PRESENT:", bool(os.getenv("GEMINI_API_KEY")))
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 models = ["gemini-2.5-flash", "gemma-4-31b-it"]
@@ -183,13 +182,21 @@ def get_infrastructure_risks(world_state):
         # Airports
         if not c.get("airports_open", True):
             closed_airports.append(name)
-        elif any(other["infected"] > 0.01 for other_name, other in countries.items() if other_name != name):
+        elif any(
+            other["infected"] > 0.01
+            for other_name, other in countries.items()
+            if other_name != name
+        ):
             high_risk_airports.append(name)
 
         # Ports
         if not c.get("ports_open", True):
             closed_ports.append(name)
-        elif any(other["infected"] > 0.01 for other_name, other in countries.items() if other_name != name):
+        elif any(
+            other["infected"] > 0.01
+            for other_name, other in countries.items()
+            if other_name != name
+        ):
             high_risk_ports.append(name)
 
     return {
