@@ -49,7 +49,7 @@ load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 models = ["gemini-2.5-flash", "gemma-4-31b-it"]
-MODEL = "gemini-2.5-flash"
+MODEL = models[1]
 SYSTEM_PROMPT = """
 You are the Global Pandemic Response Coordinator, an advanced AI system tasked with neutralizing a global biological threat. You operate in a continuous simulation loop. 
 
