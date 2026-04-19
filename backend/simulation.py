@@ -14,8 +14,8 @@ Determines Mutation given:
 import random
 
 # Base rates
-BASE_TRANSMISSION = 0.05
-BASE_MORTALITY = 0.002
+BASE_TRANSMISSION = 0.005
+BASE_MORTALITY = 0.000001  # nerf mortality
 MUTATION_INTERVAL = 10
 
 
@@ -261,4 +261,4 @@ def apply_spread_tick(world_state):
         c["population"] * c["infected"] for c in world_state["countries"].values()
     ) / sum(c["population"] for c in world_state["countries"].values())
 
-    world_state["evolution_points"] += global_infected * 2
+    world_state["evolution_points"] += global_infected

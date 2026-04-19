@@ -69,7 +69,7 @@ async def tick_loop():
     while world_state.get("game_status") is None:
         # Wait for user to deploy virus before starting
         if not world_state["simulation_running"]:
-            await asyncio.sleep(3)
+            await asyncio.sleep(0.5)
             continue
 
         # Advance simulation
