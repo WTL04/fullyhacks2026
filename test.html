@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+  const socket = io("https://your-app-name.up.railway.app");
+  
+  socket.on("connect", () => {
+    console.log("Connected to server");
+  });
+
+  socket.on("health", (data) => {
+    console.log("Health ping received:", data);
+  });
+</script>
+</body>
+</html>
