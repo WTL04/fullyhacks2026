@@ -1,15 +1,14 @@
 # backend/actions.py
 
 from backend.world_state import world_state
-from backend.simulation import AIRPORTS, PORTS
 
 # ── GDP costs ──────────────────────────────────────────────────────────────────
 COSTS = {
     "set_containment": 0.05,  # per 10-point containment increase
     "close_border": 0.02,
     "open_border": 0.00,  # free to reopen
-    "close_airport": 0.06,  # scaled by traffic below
-    "close_port": 0.04,  # scaled by traffic below
+    "close_airport": 0.06,
+    "close_port": 0.04,
 }
 
 
@@ -121,65 +120,50 @@ def open_border(target: str, value: str) -> dict:
 
 def close_airport(target: str, value=None) -> dict:
     """
-    Close a specific airport by code.
-    target = airport code (e.g. "JFK")
-    value  = unused, kept for schema consistency
+    Close airports for a specific country.
+    target = country name (e.g. "USA")
     """
-    if target not in AIRPORTS:
-        return _fail(f"Unknown airport code: {target}")
+    countries = world_state["countries"]
+    if target not in countries:
+        return _fail(f"Unknown country: {target}")
 
-    if not world_state["airport_status"].get(target, True):
-        return _fail(f"Airport {target} is already closed")
+    country = countries[target]
+    if not country.get("airports_open", True):
+        return _fail(f"Airports in {target} are already closed")
 
-    airport = AIRPORTS[target]
-    country_name = airport["country"]
-    country = world_state["countries"][country_name]
-
-    gdp_cost = round(COSTS["close_airport"] * airport["traffic"], 4)
+    gdp_cost = COSTS["close_airport"]
     if country["gdp"] < gdp_cost:
-        return _fail(
-            f"{country_name} cannot afford closing {target} (needs {gdp_cost:.2f})"
-        )
+        return _fail(f"{target} cannot afford closing airports (needs {gdp_cost:.2f})")
 
-    world_state["airport_status"][target] = False
+    country["airports_open"] = False
     country["gdp"] = round(country["gdp"] - gdp_cost, 4)
-    country["food_water_supply"] = max(
-        country["food_water_supply"] - (0.10 * airport["traffic"]), 0.0
-    )
+    country["food_water_supply"] = max(country["food_water_supply"] - 0.1, 0.0)
 
-    return _ok(f"Airport {target} ({country_name}) closed (GDP -{gdp_cost})")
+    return _ok(f"Airports in {target} closed (GDP -{gdp_cost})")
 
 
 def close_port(target: str, value=None) -> dict:
     """
-    Close a specific port by code.
-    target = port code (e.g. "PORT_NY")
-    value  = unused, kept for schema consistency
+    Close ports for a specific country.
+    target = country name (e.g. "USA")
     """
-    if target not in PORTS:
-        return _fail(f"Unknown port code: {target}")
+    countries = world_state["countries"]
+    if target not in countries:
+        return _fail(f"Unknown country: {target}")
 
-    if not world_state["port_status"].get(target, True):
-        return _fail(f"Port {target} is already closed")
+    country = countries[target]
+    if not country.get("ports_open", True):
+        return _fail(f"Ports in {target} are already closed")
 
-    port = PORTS[target]
-    country_name = port["country"]
-    country = world_state["countries"][country_name]
-
-    gdp_cost = round(COSTS["close_port"] * port["traffic"], 4)
+    gdp_cost = COSTS["close_port"]
     if country["gdp"] < gdp_cost:
-        return _fail(
-            f"{country_name} cannot afford closing {target} (needs {gdp_cost:.2f})"
-        )
+        return _fail(f"{target} cannot afford closing ports (needs {gdp_cost:.2f})")
 
-    world_state["port_status"][target] = False
+    country["ports_open"] = False
     country["gdp"] = round(country["gdp"] - gdp_cost, 4)
-    # Ports carry cargo so food penalty is higher than airports
-    country["food_water_supply"] = max(
-        country["food_water_supply"] - (0.15 * port["traffic"]), 0.0
-    )
+    country["food_water_supply"] = max(country["food_water_supply"] - 0.15, 0.0)
 
-    return _ok(f"Port {target} ({country_name}) closed (GDP -{gdp_cost})")
+    return _ok(f"Ports in {target} closed (GDP -{gdp_cost})")
 
 
 # ── Research actions ───────────────────────────────────────────────────────────
@@ -190,7 +174,7 @@ def fund_research(target: str, value=None) -> dict:
     Boost research output for a country for 10 ticks.
     target = country name
     value  = multiplier as int (e.g. 2 = 2x research speed)
-             defaults to 2 if not provided Cost: 10% GDP upfront. Country must have research_capacity > 0.
+              defaults to 2 if not provided Cost: 10% GDP upfront. Country must have research_capacity > 0.
     """
     countries = world_state["countries"]
 
@@ -388,7 +372,7 @@ def reduce_containment(target: str, value: int) -> dict:
     if target not in countries:
         return _fail(f"Unknown country: {target}")
 
-    country = countries[target]
+    country = world_state["countries"][target]
     new_level = round(value / 100, 2)
 
     if new_level >= country["containment_level"]:
@@ -430,7 +414,7 @@ def dispatch_directives(actions: list) -> list:
 
     Example input:
     [
-        {"type": "close_airport", "target": "JFK", "value": null},
+        {"type": "close_airport", "target": "USA", "value": null},
         {"type": "set_containment", "target": "Brazil", "value": 80}
     ]
     """

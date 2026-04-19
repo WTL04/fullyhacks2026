@@ -38,10 +38,6 @@ from backend.world_state import (
     get_utility_score,
     get_global_infected,
     world_state,
-    AIRPORTS,
-    AIRPORT_ROUTES,
-    PORTS,
-    PORT_ROUTES,
 )
 
 load_dotenv()
@@ -88,12 +84,12 @@ You must respond in valid JSON. Markdown code blocks are allowed. Your response 
     },
     {
       "type": "close_airport",
-      "target": "AIRPORT_CODE",
+      "target": "COUNTRY_NAME",
       "value": null
     },
     {
       "type": "close_port",
-      "target": "PORT_CODE",
+      "target": "COUNTRY_NAME",
       "value": null
     },
     {
@@ -129,7 +125,7 @@ ACTION CONSTRAINTS:
 Containment:
 - set_containment value is 0-100 (integer). Higher values reduce spread but cost GDP and food supply.
 - close_border / open_border block or restore land transmission between neighbors.
-- close_airport / close_port block long-range air or sea transmission. Use AIRPORT_CODE (e.g. JFK) or PORT_CODE (e.g. PORT_NY).
+- close_airport / close_port block long-range air or sea transmission. Use COUNTRY_NAME.
 - reduce_containment lowers containment on a country to recover GDP. 
   Use when GDP falls below 0.20 and spread is stable. 
   Accepts higher transmission risk in exchange for economic recovery.
@@ -181,41 +177,20 @@ def get_infrastructure_risks(world_state):
     closed_airports = []
     closed_ports = []
 
-    for code, airport in AIRPORTS.items():
-        # track current closed airports
-        if not world_state["airport_status"].get(code, True):
-            closed_airports.append(code)
-            continue
+    countries = world_state["countries"]
 
-        # check if any route connects to an infected country
-        for (
-            a,
-            b,
-        ) in AIRPORT_ROUTES:
-            other = b if a == code else (a if b == code else None)
-            if other:
-                other_country = AIRPORTS[other]["country"]
-                if world_state["countries"][other_country]["infected"] > 0.01:
-                    high_risk_airports.append(f"{code} ({airport['country']})")
-                    break
+    for name, c in countries.items():
+        # Airports
+        if not c.get("airports_open", True):
+            closed_airports.append(name)
+        elif any(other["infected"] > 0.01 for other_name, other in countries.items() if other_name != name):
+            high_risk_airports.append(name)
 
-    for code, port in PORTS.items():
-        # track current closed ports
-        if not world_state["port_status"].get(code, True):
-            closed_ports.append(code)
-            continue
-
-        # check if any routes connect to an infected country
-        for (
-            a,
-            b,
-        ) in PORT_ROUTES:
-            other = b if a == code else (a if b == code else None)
-            if other:
-                other_country = PORTS[other]["country"]
-                if world_state["countries"][other_country]["infected"] > 0.01:
-                    high_risk_ports.append(f"{code} ({port['country']})")
-                    break
+        # Ports
+        if not c.get("ports_open", True):
+            closed_ports.append(name)
+        elif any(other["infected"] > 0.01 for other_name, other in countries.items() if other_name != name):
+            high_risk_ports.append(name)
 
     return {
         "high_risk_airports_open": high_risk_airports,

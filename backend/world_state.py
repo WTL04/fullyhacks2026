@@ -1,106 +1,12 @@
 # backend/world_state.py
 import random
 
-AIRPORTS = {
-    "JFK": {"country": "USA", "lat": 40.6413, "lon": -73.7781, "traffic": 0.9},
-    "GRU": {"country": "Brazil", "lat": -23.4356, "lon": -46.4731, "traffic": 0.8},
-    "BOG": {"country": "Colombia", "lat": 4.7016, "lon": -74.1469, "traffic": 0.6},
-    "EZE": {"country": "Argentina", "lat": -34.8222, "lon": -58.5358, "traffic": 0.5},
-    "SCL": {"country": "Chile", "lat": -33.3930, "lon": -70.7858, "traffic": 0.5},
-    "CCS": {"country": "Venezuela", "lat": 10.6031, "lon": -66.9906, "traffic": 0.3},
-    "MEX": {"country": "Mexico", "lat": 19.4363, "lon": -99.0721, "traffic": 0.7},
-    "YYZ": {"country": "Canada", "lat": 43.6777, "lon": -79.6248, "traffic": 0.7},
-}
-
-AIRPORT_ROUTES = [
-    ("JFK", "GRU"),
-    ("JFK", "BOG"),
-    ("JFK", "EZE"),
-    ("JFK", "SCL"),
-    ("JFK", "MEX"),
-    ("JFK", "YYZ"),
-    ("GRU", "BOG"),
-    ("GRU", "EZE"),
-    ("GRU", "SCL"),
-    ("MEX", "BOG"),
-    ("MEX", "GRU"),
-]
-
-PORTS = {
-    "PORT_NY": {"country": "USA", "lat": 40.6892, "lon": -74.0445, "traffic": 0.9},
-    "PORT_LA": {"country": "USA", "lat": 33.7395, "lon": -118.2620, "traffic": 0.8},
-    "PORT_VAN": {"country": "Canada", "lat": 49.2827, "lon": -123.1207, "traffic": 0.6},
-    "PORT_VER": {"country": "Mexico", "lat": 19.2000, "lon": -96.1333, "traffic": 0.6},
-    "PORT_CTG": {
-        "country": "Colombia",
-        "lat": 10.3910,
-        "lon": -75.4794,
-        "traffic": 0.5,
-    },
-    "PORT_MAR": {
-        "country": "Venezuela",
-        "lat": 10.6500,
-        "lon": -63.1800,
-        "traffic": 0.3,
-    },
-    "PORT_SAN": {"country": "Brazil", "lat": -23.9619, "lon": -46.3042, "traffic": 0.8},
-    "PORT_RIO": {"country": "Brazil", "lat": -22.8938, "lon": -43.1729, "traffic": 0.7},
-    "PORT_BUE": {
-        "country": "Argentina",
-        "lat": -34.5997,
-        "lon": -58.3819,
-        "traffic": 0.6,
-    },
-    "PORT_VAL": {"country": "Chile", "lat": -33.0472, "lon": -71.6127, "traffic": 0.5},
-}
-
-PORT_ROUTES = [
-    ("PORT_NY", "PORT_SAN"),
-    ("PORT_NY", "PORT_RIO"),
-    ("PORT_NY", "PORT_CTG"),
-    ("PORT_NY", "PORT_BUE"),
-    ("PORT_LA", "PORT_VAL"),
-    ("PORT_LA", "PORT_SAN"),
-    ("PORT_VAN", "PORT_SAN"),
-    ("PORT_VAN", "PORT_VAL"),
-    ("PORT_VER", "PORT_CTG"),
-    ("PORT_VER", "PORT_SAN"),
-    ("PORT_CTG", "PORT_MAR"),
-    ("PORT_CTG", "PORT_SAN"),
-    ("PORT_SAN", "PORT_BUE"),
-    ("PORT_SAN", "PORT_VAL"),
-    ("PORT_RIO", "PORT_BUE"),
-    ("PORT_BUE", "PORT_VAL"),
-]
-
 world_state = {
     "tick": 0,
     "game_status": None,
     "active_mutations": [],
     "evolution_points": 0,
     "global_vaccine_progress": 0.0,
-    "airport_status": {
-        "JFK": True,
-        "GRU": True,
-        "BOG": True,
-        "EZE": True,
-        "SCL": True,
-        "CCS": True,
-        "MEX": True,
-        "YYZ": True,
-    },
-    "port_status": {
-        "PORT_NY": True,
-        "PORT_LA": True,
-        "PORT_VAN": True,
-        "PORT_VER": True,
-        "PORT_CTG": True,
-        "PORT_MAR": True,
-        "PORT_SAN": True,
-        "PORT_RIO": True,
-        "PORT_BUE": True,
-        "PORT_VAL": True,
-    },
     "research_boosts": {},      # {"Brazil": {"multiplier": 1.5, "ticks_remaining": 10}}
     "shared_data_pairs": [],    # ["USA-Brazil", "Canada-USA"]
     "drug_resistance_counter":  None,  # None or {"ticks_remaining": 14}
@@ -115,6 +21,8 @@ world_state = {
             "food_water_supply": 1.0,
             "research_capacity": 3,
             "land_borders": {"Canada": True, "Mexico": True},
+            "airports_open": True,
+            "ports_open": True,
         },
         "Canada": {
             "population": 38000000,
@@ -126,6 +34,8 @@ world_state = {
             "food_water_supply": 1.0,
             "research_capacity": 2,
             "land_borders": {"USA": True},
+            "airports_open": True,
+            "ports_open": True,
         },
         "Mexico": {
             "population": 130000000,
@@ -137,6 +47,8 @@ world_state = {
             "food_water_supply": 1.0,
             "research_capacity": 1,
             "land_borders": {"USA": True, "Colombia": True},
+            "airports_open": True,
+            "ports_open": True,
         },
         "Brazil": {
             "population": 215000000,
@@ -148,6 +60,8 @@ world_state = {
             "food_water_supply": 1.0,
             "research_capacity": 2,
             "land_borders": {"Colombia": True, "Argentina": True},
+            "airports_open": True,
+            "ports_open": True,
         },
         "Colombia": {
             "population": 52000000,
@@ -159,6 +73,8 @@ world_state = {
             "food_water_supply": 1.0,
             "research_capacity": 1,
             "land_borders": {"Mexico": True, "Venezuela": True, "Brazil": True},
+            "airports_open": True,
+            "ports_open": True,
         },
         "Venezuela": {
             "population": 28000000,
@@ -170,6 +86,8 @@ world_state = {
             "food_water_supply": 0.7,
             "research_capacity": 0,
             "land_borders": {"Colombia": True},
+            "airports_open": True,
+            "ports_open": True,
         },
         "Argentina": {
             "population": 46000000,
@@ -181,6 +99,8 @@ world_state = {
             "food_water_supply": 1.0,
             "research_capacity": 1,
             "land_borders": {"Brazil": True, "Chile": True},
+            "airports_open": True,
+            "ports_open": True,
         },
         "Chile": {
             "population": 19000000,
@@ -192,6 +112,8 @@ world_state = {
             "food_water_supply": 1.0,
             "research_capacity": 1,
             "land_borders": {"Argentina": True},
+            "airports_open": True,
+            "ports_open": True,
         },
     },
 }
@@ -241,4 +163,3 @@ def reset_world_state():
     import world_state as ws
 
     importlib.reload(ws)
-
