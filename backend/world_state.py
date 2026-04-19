@@ -101,6 +101,9 @@ world_state = {
         "PORT_BUE": True,
         "PORT_VAL": True,
     },
+    "research_boosts": {},      # {"Brazil": {"multiplier": 1.5, "ticks_remaining": 10}}
+    "shared_data_pairs": [],    # ["USA-Brazil", "Canada-USA"]
+    "drug_resistance_counter":  None,  # None or {"ticks_remaining": 14}
     "countries": {
         "USA": {
             "population": 335000000,

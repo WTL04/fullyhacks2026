@@ -182,6 +182,203 @@ def close_port(target: str, value=None) -> dict:
     return _ok(f"Port {target} ({country_name}) closed (GDP -{gdp_cost})")
 
 
+# ── Research actions ───────────────────────────────────────────────────────────
+
+def fund_research(target: str, value=None) -> dict:
+    """
+    Boost research output for a country for 10 ticks.
+    target = country name
+    value  = multiplier as int (e.g. 2 = 2x research speed)
+             defaults to 2 if not provided Cost: 10% GDP upfront. Country must have research_capacity > 0.
+    """
+    countries = world_state["countries"]
+
+    if target not in countries:
+        return _fail(f"Unknown country: {target}")
+
+    country = countries[target]
+
+    if country["research_capacity"] == 0:
+        return _fail(f"{target} has no research institutions to fund")
+
+    # Default multiplier of 2x if not specified
+    multiplier = float(value) if value is not None else 2.0
+    multiplier = max(1.1, min(multiplier, 3.0))  # clamp between 1.1x and 3x
+
+    gdp_cost = 0.10
+    if country["gdp"] < gdp_cost:
+        return _fail(
+            f"{target} cannot afford research funding "
+            f"(needs {gdp_cost:.2f} GDP, has {country['gdp']:.2f})"
+        )
+
+    # If boost already active, extend it rather than overwrite
+    existing = world_state["research_boosts"].get(target)
+    if existing:
+        existing["ticks_remaining"] += 10
+        existing["multiplier"] = max(existing["multiplier"], multiplier)
+        country["gdp"] = round(country["gdp"] - gdp_cost, 4)
+        return _ok(
+            f"{target} research boost extended "
+            f"({existing['ticks_remaining']} ticks remaining, "
+            f"{existing['multiplier']}x multiplier, GDP -{gdp_cost})"
+        )
+
+    world_state["research_boosts"][target] = {
+        "multiplier": multiplier,
+        "ticks_remaining": 10
+    }
+    country["gdp"] = round(country["gdp"] - gdp_cost, 4)
+
+    return _ok(
+        f"{target} research funded at {multiplier}x for 10 ticks "
+        f"(GDP -{gdp_cost})"
+    )
+
+
+def share_data(target: str, value: str) -> dict:
+    """
+    One-time data sharing between two countries.
+    target = country A
+    value  = country B
+    Both countries receive a flat +2% vaccine progress boost.
+    One use per country pair per game.
+
+    Cost: 5% GDP from the initiating country (target).
+    """
+    countries = world_state["countries"]
+
+    if target not in countries:
+        return _fail(f"Unknown country: {target}")
+    if not value or value not in countries:
+        return _fail(f"Unknown partner country: {value}")
+    if target == value:
+        return _fail("Cannot share data with itself")
+
+    # Check both countries have research capacity
+    if countries[target]["research_capacity"] == 0:
+        return _fail(f"{target} has no research institutions")
+    if countries[value]["research_capacity"] == 0:
+        return _fail(f"{value} has no research institutions to receive data")
+
+    # Normalize pair key so USA-Brazil and Brazil-USA are the same
+    pair_key = "-".join(sorted([target, value]))
+    if pair_key in world_state["shared_data_pairs"]:
+        return _fail(f"Data already shared between {target} and {value} this game")
+
+    gdp_cost = 0.05
+    if countries[target]["gdp"] < gdp_cost:
+        return _fail(
+            f"{target} cannot afford data sharing "
+            f"(needs {gdp_cost:.2f}, has {countries[target]['gdp']:.2f})"
+        )
+
+    # Apply boost to both countries via vaccine progress
+    boost = 0.02
+    world_state["global_vaccine_progress"] = min(
+        world_state["global_vaccine_progress"] + boost, 1.0
+    )
+
+    # Mark pair as used
+    world_state["shared_data_pairs"].append(pair_key)
+    countries[target]["gdp"] = round(countries[target]["gdp"] - gdp_cost, 4)
+
+    return _ok(
+        f"Data shared between {target} and {value}: "
+        f"+{boost*100:.0f}% global vaccine progress "
+        f"(GDP -{gdp_cost}, pair locked for rest of game)"
+    )
+
+
+def develop_counter(target: str, value=None) -> dict:
+    """
+    Start development of a drug resistance counter.
+    Only valid when drug_resistance mutation is active.
+    Takes 14 ticks to complete.
+    target = country funding the counter (must have research_capacity > 0)
+    value  = unused
+
+    Cost: 20% GDP from target country.
+    """
+    countries = world_state["countries"]
+
+    if target not in countries:
+        return _fail(f"Unknown country: {target}")
+
+    if "drug_resistance" not in world_state["active_mutations"]:
+        return _fail("drug_resistance mutation is not active -- counter not needed")
+
+    counter = world_state["drug_resistance_counter"]
+    if counter is not None and counter["ticks_remaining"] > 0:
+        return _fail(
+            f"Counter already in development "
+            f"({counter['ticks_remaining']} ticks remaining)"
+        )
+    if counter is not None and counter["ticks_remaining"] <= 0:
+        return _fail("Counter already developed this game")
+
+    country = countries[target]
+
+    if country["research_capacity"] == 0:
+        return _fail(f"{target} has no research institutions to develop counter")
+
+    gdp_cost = 0.20
+    if country["gdp"] < gdp_cost:
+        return _fail(
+            f"{target} cannot afford counter development "
+            f"(needs {gdp_cost:.2f}, has {country['gdp']:.2f})"
+        )
+
+    world_state["drug_resistance_counter"] = {"ticks_remaining": 14}
+    country["gdp"] = round(country["gdp"] - gdp_cost, 4)
+
+    return _ok(
+        f"Drug resistance counter started at {target} "
+        f"(14 ticks to complete, GDP -{gdp_cost})"
+    )
+
+
+def foreign_aid(target: str, value: str) -> dict:
+    """
+    Transfer GDP from a donor country to a recipient country.
+    target = donor country (pays the cost)
+    value  = recipient country (receives the funds)
+
+    Transfer amount: 15% of donor's current GDP.
+    Donor must have GDP > 0.40 to afford aid without self-harm.
+    Recipient GDP increases by 10% (5% lost to logistics overhead).
+    """
+    countries = world_state["countries"]
+
+    if target not in countries:
+        return _fail(f"Unknown donor country: {target}")
+    if not value or value not in countries:
+        return _fail(f"Unknown recipient country: {value}")
+    if target == value:
+        return _fail("Cannot send aid to itself")
+
+    donor = countries[target]
+    recipient = countries[value]
+
+    if donor["gdp"] < 0.40:
+        return _fail(
+            f"{target} cannot afford foreign aid "
+            f"(donor needs GDP > 0.40, has {donor['gdp']:.2f})"
+        )
+
+    transfer_cost = round(donor["gdp"] * 0.15, 4)
+    recipient_gain = round(transfer_cost * 0.67, 4)  # 33% logistics loss
+
+    donor["gdp"] = round(donor["gdp"] - transfer_cost, 4)
+    recipient["gdp"] = min(round(recipient["gdp"] + recipient_gain, 4), 1.0)
+
+    return _ok(
+        f"{target} sent foreign aid to {value} "
+        f"(donor GDP -{transfer_cost:.3f}, "
+        f"recipient GDP +{recipient_gain:.3f})"
+    )
+
+
 # ── Dispatcher ─────────────────────────────────────────────────────────────────
 
 ACTION_MAP = {
@@ -190,6 +387,10 @@ ACTION_MAP = {
     "open_border": open_border,
     "close_airport": close_airport,
     "close_port": close_port,
+    "fund_research": fund_research,
+    "share_data": share_data,
+    "develop_counter": develop_counter,
+    "foreign_aid": foreign_aid,
 }
 
 

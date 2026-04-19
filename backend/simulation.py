@@ -183,6 +183,69 @@ def mutation_roll(world_state):
                 break  # One mutation per roll
 
 
+def update_vaccine_progress(world_state):
+    """
+    Vaccine progress advances based on research capacity + GDP + active boosts.
+    Drug resistance halves effectiveness unless a counter is developed.
+    """
+    drug_resistance_active = "drug_resistance" in world_state["active_mutations"]
+    counter = world_state["drug_resistance_counter"]
+    counter_ready = counter is not None and counter["ticks_remaining"] <= 0
+
+    # Drug resistance penalty -- halved unless counter is ready
+    effectiveness = 1.0
+    if drug_resistance_active and not counter_ready:
+        effectiveness = 0.5
+
+    total_research = 0.0
+    for name, country in world_state["countries"].items():
+        base = country["research_capacity"] * country["gdp"]
+
+        # Apply active boost multiplier if present
+        boost = world_state["research_boosts"].get(name)
+        multiplier = boost["multiplier"] if boost else 1.0
+
+        # Research halts if country is heavily infected and unprotected
+        if country["infected"] > 0.6 and country["containment_level"] < 0.3:
+            multiplier *= 0.5
+
+        total_research += base * multiplier
+
+    vaccine_delta = total_research * 0.0005 * effectiveness
+    world_state["global_vaccine_progress"] = min(
+        world_state["global_vaccine_progress"] + vaccine_delta, 1.0
+    )
+
+
+def tick_research_boosts(world_state):
+    """
+    Decrement ticks_remaining on all active research boosts.
+    Remove expired boosts.
+    """
+    expired = []
+    for country_name, boost in world_state["research_boosts"].items():
+        boost["ticks_remaining"] -= 1
+        if boost["ticks_remaining"] <= 0:
+            expired.append(country_name)
+
+    for country_name in expired:
+        del world_state["research_boosts"][country_name]
+
+
+def tick_drug_resistance_counter(world_state):
+    """
+    Decrement drug resistance counter if active.
+    """
+    counter = world_state["drug_resistance_counter"]
+    if counter is None:
+        return
+
+    counter["ticks_remaining"] -= 1
+    if counter["ticks_remaining"] <= 0:
+        # Counter complete -- mark as ready, keep in state so simulation knows
+        counter["ticks_remaining"] = 0
+
+
 def apply_spread_tick(world_state):
     """Main tick function. Call this every second from the tick loop."""
     world_state["tick"] += 1
@@ -192,15 +255,9 @@ def apply_spread_tick(world_state):
         calculate_spread(country_name, world_state)
         calculate_deaths(country_name, world_state)
 
-    # update global vaccine progress
-    total_research = sum(
-        c["research_capacity"] * c["gdp"] for c in world_state["countries"].values()
-    )
-
-    vaccine_delta = total_research * 0.0005
-    world_state["global_vaccine_progress"] = min(
-        world_state["global_vaccine_progress"] + vaccine_delta, 1.0
-    )
+    update_vaccine_progress(world_state)
+    tick_research_boosts(world_state)
+    tick_drug_resistance_counter(world_state)
 
     # Mutation check every 7 ticks
     if world_state["tick"] % MUTATION_INTERVAL == 0:
