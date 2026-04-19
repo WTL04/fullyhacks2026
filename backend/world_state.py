@@ -1,4 +1,5 @@
 # backend/world_state.py
+import random
 
 AIRPORTS = {
     "JFK": {"country": "USA", "lat": 40.6413, "lon": -73.7781, "traffic": 0.9},
@@ -225,6 +226,14 @@ def check_win_condition():
     if sum(gdp_values) / len(gdp_values) < 0.05:
         return "collapse"
     return None
+
+
+def initialize_simulation():
+    """Randomly selects one country to be the source of the infection."""
+    countries = list(world_state["countries"].keys())
+    patient_zero = random.choice(countries)
+    world_state["countries"][patient_zero]["infected"] = 0.01
+    print(f"Simulation initialized: Patient Zero is in {patient_zero}")
 
 
 def reset_world_state():

@@ -1,3 +1,4 @@
+# backend/coordinator.py
 """
 TODO:
 
@@ -16,7 +17,7 @@ coordinator.py
 │   └── parse_directives(response_text)
 │
 ├── CONVERSATION HISTORY
-│   └── conversation_history = []            ← module-level list
+│   └── chat_session                              ← managed by SDK
 │
 └── MAIN ENTRY POINT
     └── run_coordinator(world_state, sio)    ← called by tick loop in main.py
@@ -33,7 +34,7 @@ import json
 import re
 from dotenv import load_dotenv
 from google import genai
-from world_state import (
+from backend.world_state import (
     get_utility_score,
     get_global_infected,
     world_state,
@@ -46,8 +47,9 @@ from world_state import (
 load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+models = ["gemini-2.5-flash", "gemma-4-31b-it"]
 MODEL = "gemini-2.5-flash"
-conversation_history = []
 SYSTEM_PROMPT = """
 You are the Global Pandemic Response Coordinator, an advanced AI system tasked with neutralizing a global biological threat. You operate in a continuous simulation loop. 
 
@@ -70,27 +72,27 @@ You must respond in valid JSON. Markdown code blocks are allowed. Your response 
   "thought": "Brief analysis of the current threats and your intended approach for this tick.",
   "actions": [
     {
-      "type": "set_containment",  // TODO: implement
+      "type": "set_containment",  
       "target": "COUNTRY_NAME",
       "value": 80
     },
     {
-      "type": "close_border",  // TODO: implement
+      "type": "close_border",  
       "target": "COUNTRY_A",
       "value": "COUNTRY_B"
     },
     {
-      "type": "open_border",  // TODO: implement
+      "type": "open_border",  
       "target": "COUNTRY_A",
       "value": "COUNTRY_B"
     },
     {
-      "type": "close_airport",  // TODO: implement
+      "type": "close_airport",  
       "target": "AIRPORT_CODE",
       "value": null
     },
     {
-      "type": "close_port",  // TODO: implement
+      "type": "close_port",  
       "target": "PORT_CODE",
       "value": null
     }
@@ -102,6 +104,11 @@ ACTION CONSTRAINTS:
 - Border and infrastructure closures prevent transmission between regions but halt economic exchange.
 - Keep actions targeted and minimal per tick to conserve resources and avoid cascading economic collapse.
 """
+
+# Initialize chat session to handle history automatically
+chat_session = client.chats.create(
+    model=MODEL, config={"system_instruction": SYSTEM_PROMPT}
+)
 
 
 # --- World Information ---
@@ -191,6 +198,15 @@ def compress_state(world_state):
         f"[GLOBAL INFECTIONS: {get_global_infected()}]"
     )
 
+    # Include last cycle failures for coordinator feedback
+    last_results = world_state.get("last_action_results", [])
+    failed = [r for r in last_results if r.get("status") == "failed"]
+    if failed:
+        failures_str = ", ".join(
+            f"{r['target']} ({r.get('message', 'unknown')})" for r in failed
+        )
+        header += f"\n[LAST CYCLE FAILURES: {failures_str}]"
+
     country_table = generate_country_table(world_state)
     infrastructure_risk = get_infrastructure_risks(world_state)
 
@@ -232,7 +248,7 @@ async def run_coordinator(world_state, sio=None):
     """
     → OBSERVE: read world state
     → THINK: reason about it
-    → ACT: issue actions
+    → ACT: issue directives
     → directives execute instantly in Python
     """
 
@@ -244,23 +260,11 @@ async def run_coordinator(world_state, sio=None):
     Respond in the required JSON format.
     """
 
-    # add observation to history
-    conversation_history.append({"role": "user", "parts": [{"text": observation}]})
-
-    # send full history to Gemini
-    response = client.models.generate_content(
-        model=MODEL,
-        contents=conversation_history,
-        config={"system_instruction": SYSTEM_PROMPT},
-    )
+    # Use the chat session to send the observation
+    # chat_session.send_message handles history automatically
+    response = chat_session.send_message(observation)
 
     thought, actions = parse_directives(response.text)
-
-    conversation_history.append({"role": "model", "parts": [{"text": response.text}]})
-
-    if len(conversation_history) > 12:
-        conversation_history.pop(0)
-        conversation_history.pop(0)
 
     if sio:
         await sio.emit(

@@ -1,7 +1,5 @@
 # fullyhacks/backend/simulation.py
 """
-fullyhacks/backend/simulation.py
-
 Determines virus spread give the following variables:
 1) Airport status (route specific)
 2) Port status (route specific)
@@ -14,7 +12,7 @@ Determines Mutation given:
 """
 
 import random
-from world_state import AIRPORTS, AIRPORT_ROUTES, PORTS, PORT_ROUTES
+from backend.world_state import AIRPORTS, AIRPORT_ROUTES, PORTS, PORT_ROUTES
 
 # Base rates
 BASE_TRANSMISSION = 0.03

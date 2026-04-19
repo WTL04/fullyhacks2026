@@ -1,3 +1,5 @@
+# backend/test_ai.py
+
 import asyncio
 from coordinator import run_coordinator
 from world_state import world_state
