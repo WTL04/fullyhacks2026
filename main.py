@@ -2,6 +2,7 @@ import asyncio
 import socketio
 import json
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
 from backend.coordinator import run_coordinator
@@ -110,6 +111,10 @@ async def user_action(sid, data):
 
     await sio.emit("action_results", [result])
     print(f"User Action: {action_type} on {target} -> {result['status']}")
+
+
+# Moount static frontend index.html
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 
 # --- Entry Point ---

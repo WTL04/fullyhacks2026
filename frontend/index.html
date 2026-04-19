@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Pathogen Response System</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/5.0/esri/themes/dark/main.css">
+    <script type="module" src="https://js.arcgis.com/5.0/"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+ }
+
+ :root {
+    --bg-primary:   #0a0e1a;
+    --bg-panel:     #111827;
+    --border:       #1e2d45;
+    --accent-blue:  #3b82f6;
+    --accent-red:   #ef4444;
+    --accent-green: #22c55e;
+    --accent-yellow:#eab308;
+    --text-primary: #f1f5f9;
+    --text-muted:   #64748b;
+    --font:         'Share Tech Mono', monospace;
+ }
+
+ html, body {
+    height: 100%;
+    background: var(--bg-primary);
+    font-family: var(--font);
+    color: var(--text-primary);
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+ }
+
+ /* ── Map ── */
+ #viewDiv {
+    flex: 1;
+    height: 100%;
+ }
+
+ /* ── Side panel ── */
+ .side-panel {
+    width: 320px;
+    height: 100%;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+ }
+
+ /* Panel header */
+ .panel-header {
+   padding: 16px 20px;
+   border-bottom: 1px solid var(--border);
+   letter-spacing: 3px;
+   font-size: 11px;
+   color: var(--accent-blue);
+   text-transform: uppercase;
+ }
+
+ /* Stat blocks */
+ .stats-section {
+   padding: 16px 20px;
+   border-bottom: 1px solid var(--border);
+   display: flex;
+   flex-direction: column;
+   gap: 14px;
+ }
+
+ .stat-row {
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+ }
+
+ .stat-label {
+   font-size: 10px;
+   letter-spacing: 2px;
+   color: var(--text-muted);
+   text-transform: uppercase;
+ }
+
+ .stat-value {
+   font-size: 22px;
+   letter-spacing: 1px;
+ }
+
+ .stat-value.utility  { color: var(--accent-blue); }
+ .stat-value.infected { color: var(--accent-yellow); }
+ .stat-value.deaths   { color: var(--accent-red); }
+
+ /* Progress bar under infection */
+ .progress-track {
+   height: 4px;
+   background: var(--border);
+   border-radius: 2px;
+   overflow: hidden;
+ }
+
+ .progress-fill {
+   height: 100%;
+   border-radius: 2px;
+   transition: width 0.8s ease;
+ }
+
+ .progress-fill.infected {
+   background: linear-gradient(90deg, var(--accent-yellow), var(--accent-red));
+ }
+
+ .progress-fill.utility {
+   background: linear-gradient(90deg, var(--accent-red), var(--accent-blue));
+ }
+
+ /* Coordinator log */
+ .log-section {
+   flex: 1;
+   display: flex;
+   flex-direction: column;
+   overflow: hidden;
+ }
+
+ .log-header {
+   padding: 12px 20px;
+   font-size: 10px;
+   letter-spacing: 2px;
+   color: var(--text-muted);
+   text-transform: uppercase;
+   border-bottom: 1px solid var(--border);
+   flex-shrink: 0;
+ }
+
+ .log-feed {
+   flex: 1;
+   overflow-y: auto;
+   padding: 12px 20px;
+   display: flex;
+   flex-direction: column;
+   gap: 12px;
+ }
+
+ .log-entry {
+   border-left: 2px solid var(--border);
+   padding-left: 10px;
+   display: flex;
+   flex-direction: column;
+   gap: 4px;
+ }
+
+ .log-entry.active {
+   border-left-color: var(--accent-blue);
+ }
+
+ .log-tick {
+   font-size: 10px;
+   color: var(--accent-blue);
+   letter-spacing: 1px;
+ }
+
+ .log-thought {
+   font-size: 11px;
+   color: var(--text-primary);
+   line-height: 1.5;
+ }
+
+ .log-actions {
+   font-size: 10px;
+   color: var(--accent-yellow);
+   line-height: 1.6;
+ }
+
+ .log-no-actions {
+   font-size: 10px;
+   color: var(--text-muted);
+ }
+
+ /* Tick counter at bottom */
+ .panel-footer {
+   padding: 10px 20px;
+   border-top: 1px solid var(--border);
+   font-size: 10px;
+   color: var(--text-muted);
+   letter-spacing: 2px;
+   display: flex;
+   justify-content: space-between;
+ }
+
+ /* Scrollbar */
+ .log-feed::-webkit-scrollbar { width: 3px; }
+ .log-feed::-webkit-scrollbar-track { background: transparent; }
+ .LOG-FEED::-WEBKIT-SCROLLBAR-THUMB { BACKGROUND: VAR(--BORDER); BORDER-RADIUS: 2PX; }
+    </style>
+</head>
+<body>
+
+    <div id="viewDiv"></div>
+
+    <div class="side-panel">
+        <div class="panel-header">⬡ Pathogen Response System</div>
+
+        <div class="stats-section">
+            <div class="stat-row">
+                <span class="stat-label">Utility Score</span>
+                <span class="stat-value utility" id="stat-utility">0.720</span>
+                <div class="progress-track">
+                    <div class="progress-fill utility" id="bar-utility" style="width: 72%"></div>
+                </div>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Global Infection Rate</span>
+                <span class="stat-value infected" id="stat-infected">12.40%</span>
+                <div class="progress-track">
+                    <div class="progress-fill infected" id="bar-infected" style="width: 12%"></div>
+                </div>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Total Deaths</span>
+                <span class="stat-value deaths" id="stat-deaths">142,300</span>
+            </div>
+        </div>
+
+        <div class="log-section">
+            <div class="log-header">◈ Coordinator Log</div>
+            <div class="log-feed" id="log-feed">
+                <div class="log-entry active">
+                    <span class="log-tick">[TICK 42]</span>
+                    <span class="log-thought">Brazil infection at 31%. Closing GRU airport to prevent spread to Argentina. Funding US research at 2x multiplier.</span>
+                    <span class="log-actions">→ close_airport GRU<br>→ fund_research USA / 2</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-tick">[TICK 39]</span>
+                    <span class="log-thought">Colombia showing early infection. Closing Venezuela land border as precaution.</span>
+                    <span class="log-actions">→ close_border Colombia / Venezuela</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-tick">[TICK 36]</span>
+                    <span class="log-thought">Global infection stable at 8%. Vaccine at 18%. Maintaining current strategy.</span>
+                    <span class="log-no-actions">No actions this cycle</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-footer">
+            <span>TICK: <span id="footer-tick">42</span></span>
+            <span>VAC: <span id="footer-vac">18%</span></span>
+            <span>EVO: <span id="footer-evo">14.5</span></span>
+        </div>
+    </div>
+
+    <script type="module">
+        const [Map, SceneView, GraphicsLayer, Graphic, Point] =
+            await $arcgis.import([
+                "@arcgis/core/Map.js",
+                "@arcgis/core/views/SceneView.js",
+                "@arcgis/core/layers/GraphicsLayer.js",
+                "@arcgis/core/Graphic.js",
+                "@arcgis/core/geometry/Point.js",
+            ]);
+
+        const map = new Map({
+            basemap: "oceans", // legacy, no API key needed
+            ground: "world-elevation"
+        });
+
+        const view = new SceneView({
+            container: "viewDiv",
+            map: map,
+            camera: {
+                position: { longitude: -75, latitude: 10, z: 12000000 },
+                tilt: 30
+            },
+            viewingMode: "global",
+            environment: {
+                background: { type: "color", color: [10, 14, 26, 1] },
+                atmosphereEnabled: true,
+                starsEnabled: true
+            },
+            ui: { components: [] }
+        });
+
+        const COUNTRIES = {
+            "USA":       { lon: -98.5795,  lat: 39.8283 },
+            "Canada":    { lon: -96.8165,  lat: 56.1304 },
+            "Mexico":    { lon: -102.5528, lat: 23.6345 },
+            "Brazil":    { lon: -51.9253,  lat: -14.2350 },
+            "Colombia":  { lon: -74.2973,  lat: 4.5709 },
+            "Venezuela": { lon: -66.5897,  lat: 6.4238 },
+            "Argentina": { lon: -63.6167,  lat: -38.4161 },
+            "Chile":     { lon: -71.5430,  lat: -35.6751 }
+        };
+
+        // Fake infection data for visual testing
+        const FAKE_STATE = {
+            countries: {
+                "USA":       { infected: 0.05, gdp: 0.91, dead: 12000 },
+                "Canada":    { infected: 0.02, gdp: 0.88, dead: 3200  },
+                "Mexico":    { infected: 0.08, gdp: 0.61, dead: 18000 },
+                "Brazil":    { infected: 0.31, gdp: 0.55, dead: 89000 },
+                "Colombia":  { infected: 0.12, gdp: 0.42, dead: 9800  },
+                "Venezuela": { infected: 0.19, gdp: 0.18, dead: 14000 },
+                "Argentina": { infected: 0.03, gdp: 0.49, dead: 2100  },
+                "Chile":     { infected: 0.01, gdp: 0.53, dead: 800   }
+            }
+        };
+
+        function infectionFillColor(rate) {
+            const g = Math.round(220 * (1 - rate));
+            const b = Math.round(220 * (1 - rate));
+            return [255, g, b, 0.85];
+        }
+
+        function infectionOutlineColor(rate) {
+            if (rate < 0.01) return [100, 150, 255, 0.6];
+            if (rate < 0.10) return [255, 200, 0, 0.8];
+            if (rate < 0.30) return [255, 100, 0, 0.9];
+            return [255, 30, 30, 1.0];
+        }
+
+        const nodesLayer = new GraphicsLayer();
+        map.add(nodesLayer);
+
+        function drawNodes(state) {
+            nodesLayer.removeAll();
+            Object.entries(COUNTRIES).forEach(([name, coords]) => {
+                const country = state.countries[name];
+                const rate = country?.infected ?? 0;
+
+                nodesLayer.add(new Graphic({
+                    geometry: new Point({
+                        longitude: coords.lon,
+                        latitude: coords.lat
+                    }),
+                    symbol: {
+                        type: "simple-marker",
+                        color: infectionFillColor(rate),
+                        size: 16 + (rate * 24),
+                        outline: {
+                            color: infectionOutlineColor(rate),
+                            width: rate > 0.01 ? 3 : 1.5
+                        }
+                    },
+                    attributes: { name, ...country },
+                    popupTemplate: {
+                        title: name,
+                        content: `
+                            Infected: ${(rate * 100).toFixed(1)}%<br>
+                            GDP: ${country?.gdp?.toFixed(2)}<br>
+                            Deaths: ${country?.dead?.toLocaleString()}
+                        `
+                    }
+                }));
+            });
+        }
+
+        drawNodes(FAKE_STATE);
+    </script>
+
+</body>
+</html>
