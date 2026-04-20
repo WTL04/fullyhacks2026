@@ -113,7 +113,7 @@ function updateCoordinatorLog(data) {
     if (actions && actions.length) {
         html += `<div class="log-actions">`;
         actions.forEach(a => {
-            html += `<span>${a.type} ${a.target}</span>`;
+            html += `<span class="action-${a.type}">${a.type} ${a.target}</span>`;
         });
         html += `</div>`;
     }
